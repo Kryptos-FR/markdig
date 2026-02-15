@@ -4,7 +4,7 @@
 
 **Goal**: Create a parallel implementation of Markdig using stack-based ref structs to validate zero-copy parsing approach
 
-**Status**: Phase 1 - In Progress (1.1 Complete)
+**Status**: Phase 1 - In Progress (1.1 and 1.2 Complete)
 **Target Framework**: .NET 10.0
 **Approach**: Strategy 5 (MemoryDocument ref struct) from research analysis
 **Repository**: New `src/Markdig2/` project (parallel to `src/Markdig/`)
@@ -58,9 +58,9 @@ src/
     │   ├── RefMardownParserContext.cs
     │   └── ...
     │
-    ├── Syntax/                 (AST Types - ref structs)
+    ├── Syntax/                 (AST Types - mostly ref structs)
     │   ├── RefMarkdownDocument.cs
-    │   ├── RefBlock.cs
+    │   ├── Block.cs              (regular struct, not ref struct)
     │   ├── RefContainerBlock.cs
     │   ├── RefLeafBlock.cs
     │   ├── RefParagraph.cs
@@ -112,7 +112,7 @@ tests/
 
 | Markdig | Markdig2 | Notes |
 |---------|----------|-------|
-| `Block` (class) | `RefBlock` (ref struct) | Discriminated type (using int discriminator) |
+| `Block` (class) | `Block` (struct) | Discriminated type (using int discriminator); regular struct not ref struct |
 | `ContainerBlock` (class) | `RefContainerBlock` (ref struct) | Variant with children |
 | `LeafBlock` (class) | `RefLeafBlock` (ref struct) | Variant with content |
 | `Paragraph` (class) | `RefParagraph` (ref struct) | Specialized leaf block |
@@ -150,17 +150,25 @@ tests/
 
 **Output**: Can read lines from a span ✅
 
-#### 1.2 AST Base Types (~12 hours)
-- [ ] `RefBlock` ref struct (discriminated)
-  - Type enum (Paragraph, Heading, etc.)
-  - Variant storage (union-like pattern)
-  - Content storage (RefStringView)
-  - Children storage (Span<RefBlock>)
-- [ ] Specific block types: `RefParagraph`, `RefHeading`, `RefCodeBlock`, etc.
-  - Each as specialized ref struct variant
-  - Factory methods for creation
+#### 1.2 AST Base Types (~12 hours) ✅ COMPLETED
+- [x] `BlockType` enum with 11 markdown block types
+- [x] `Block` struct (discriminated union pattern)
+  - Type enum (Paragraph, Heading, CodeBlock, Quote, List, etc.)
+  - Variant storage with Data1/Data2/Data3 fields
+  - Content storage via ContentStart/ContentEnd indices (indices instead of RefStringView)
+  - Children storage via FirstChildIndex/ChildCount (index-based, not Span<Block>)
+- [x] Factory methods: CreateParagraph, CreateHeading, CreateCodeBlock, CreateQuote, etc.
+  - Helper properties: IsLeafBlock, IsContainerBlock, HeadingLevel
+  - GetContent(Span<char>) returns RefStringView
+- [x] `RefMarkdownDocument` ref struct
+  - Flat block array architecture with index-based relationships
+  - Top-level block management
+  - Child navigation (GetChildren)
+- [x] Comprehensive unit tests (77 total tests, 100% pass)
 
-**Output**: Can represent parsed block tree as ref structs on stack
+**Output**: Can represent parsed block tree with index-based relationships ✅
+
+Note: `Block` is a regular struct (not ref struct) because ref structs cannot be array elements or Span<T> type parameters. Index-based approach maintains zero-copy parsing via GetContent() pattern.
 
 #### 1.3 Parser Entry Point (~10 hours)
 - [ ] `RefMarkdownParser.Parse(Span<char>)` → `RefMarkdownDocument`
@@ -432,17 +440,18 @@ Total Effort: ~150-160 hours (4 weeks for 1 FTE, or 8 weeks for 0.5 FTE)
 **Implication**: Must render or materialize during parsing; can't cache
 
 ### 2. Discriminated Union for Block Types
-**Decision**: Single `RefBlock` with type enum + variant storage
-**Rationale**: Simpler than separate types; easier to store in Span
-**Alternative**: Parallel ref struct types (RefParagraph, RefHeading, etc.) - more type-safe but harder to store in arrays
+**Decision**: Single `Block` (regular struct) with type enum + variant storage
+**Rationale**: Simpler than separate types; can be stored in arrays (Block[])
+**Alternative**: Parallel ref struct types (RefParagraph, RefHeading, etc.) - more type-safe but cannot be stored in arrays
 
 ```csharp
-public ref struct RefBlock
+public struct Block  // Regular struct, not ref struct
 {
     public BlockType Type;        // enum
-    public RefStringView Content;
-    public Span<RefBlock> Children;
-    public int IndentLevel;
+    public int ContentStart;      // Index into source
+    public int ContentEnd;        // Index into source
+    public int FirstChildIndex;   // Index-based children
+    public int ChildCount;
     // ... other shared fields
 }
 
