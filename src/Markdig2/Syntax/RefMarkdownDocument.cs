@@ -17,10 +17,10 @@ public ref struct RefMarkdownDocument
     /// Initializes a new instance of <see cref="RefMarkdownDocument"/>.
     /// </summary>
     /// <param name="source">The source markdown text.</param>
-    /// <param name="allBlocks">All parsed blocks in a flat array.</param>
+    /// <param name="allBlocks">All parsed blocks in a flat span.</param>
     /// <param name="topLevelCount">The number of top-level blocks.</param>
     /// <param name="lineCount">The total number of lines in the source.</param>
-    public RefMarkdownDocument(Span<char> source, Block[] allBlocks, int topLevelCount, int lineCount)
+    public RefMarkdownDocument(Span<char> source, Span<Block> allBlocks, int topLevelCount, int lineCount)
     {
         Source = source;
         AllBlocks = allBlocks;
@@ -34,10 +34,10 @@ public ref struct RefMarkdownDocument
     public Span<char> Source { get; }
 
     /// <summary>
-    /// Gets all blocks (including nested children) in a flat array.
+    /// Gets all blocks (including nested children) in a flat span.
     /// Top-level blocks are first, followed by their descendants.
     /// </summary>
-    public Block[] AllBlocks { get; }
+    public Span<Block> AllBlocks { get; }
 
     /// <summary>
     /// Gets the number of top-level blocks.
@@ -64,7 +64,7 @@ public ref struct RefMarkdownDocument
     /// </summary>
     public readonly Span<Block> GetTopLevelBlocks()
     {
-        return AllBlocks.AsSpan(0, TopLevelBlockCount);
+        return AllBlocks[..TopLevelBlockCount];
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public ref struct RefMarkdownDocument
             return [];
         }
 
-        return AllBlocks.AsSpan(block.FirstChildIndex, block.ChildCount);
+        return AllBlocks.Slice(block.FirstChildIndex, block.ChildCount);
     }
 
     /// <summary>
