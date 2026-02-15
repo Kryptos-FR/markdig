@@ -186,6 +186,13 @@ Note: `Block` is a regular struct (not ref struct) because ref structs cannot be
 
 **Output**: Can parse simple markdown (paragraph + blank lines) ✅
 
+**Phase 1 Bonus - Early Performance Validation:**
+- Created Markdig2.Benchmarks project (early from Phase 4)
+- Benchmarked Phase 1 parser vs original Markdig
+- **Results: 7.5x faster, 38% less memory allocation, 37% less GC pressure**
+- Validates zero-copy ref struct approach is highly promising
+- See [Markdig2.Benchmarks/README.md](../src/Markdig2.Benchmarks/README.md) for details
+
 **Phase 1 Subtotal**: ~30 hours
 **Milestone**: Can parse and represent simple markdown structure
 
