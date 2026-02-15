@@ -24,6 +24,9 @@
   </Project>
   <Project Path="Markdig.WebApp/Markdig.WebApp.csproj" />
   <Project Path="Markdig/Markdig.csproj" />
+  <Project Path="Markdig2.Tests/Markdig2.Tests.csproj">
+    <BuildDependency Project="Markdig2/Markdig2.csproj" />
+  </Project>
   <Project Path="Markdig2/Markdig2.csproj" />
   <Project Path="mdtoc/mdtoc.csproj" />
   <Project Path="SpecFileGen/SpecFileGen.csproj" />
