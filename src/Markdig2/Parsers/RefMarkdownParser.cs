@@ -20,68 +20,27 @@ public static class RefMarkdownParser
     /// <returns>A RefMarkdownDocument containing the parsed structure.</returns>
     public static RefMarkdownDocument Parse(Span<char> source)
     {
-        // Use stack allocation for small documents, pool for larger ones
-        RefCollection<Block> blocks = new(stackalloc Block[64]);
-        var lineReader = new RefLineReader(source);
+        // Use stack allocation for block collections (8KB for blocks, 1KB for container stack, 8KB for line boundaries)
+        Span<Block> blockBuffer = stackalloc Block[256];
+        Span<int> containerBuffer = stackalloc int[32];
+        Span<int> lineBoundaryBuffer = stackalloc int[1024]; // 512 lines * 2 boundaries each
 
-        int currentLine = 0;
-        int paragraphStartLine = -1;
-        int paragraphStartOffset = -1;
-        int paragraphEndOffset = -1;
-
-        while (lineReader.HasMore)
-        {
-            var lineStart = lineReader.Position;
-            var line = lineReader.ReadLine();
-            var trimmedLine = line.TrimStart();
-
-            // Check if line is blank
-            if (trimmedLine.IsEmpty)
-            {
-                // Close any open paragraph
-                if (paragraphStartLine >= 0)
-                {
-                    var paragraph = Block.CreateParagraph(paragraphStartLine, 0);
-                    paragraph.ContentStart = paragraphStartOffset;
-                    paragraph.ContentEnd = paragraphEndOffset;
-                    blocks.Add(paragraph);
-                    paragraphStartLine = -1;
-                }
-
-                // Add blank line block
-                var blankLine = Block.CreateBlankLine(currentLine, 0);
-                blankLine.ContentStart = lineStart;
-                blankLine.ContentEnd = lineReader.Position;
-                blocks.Add(blankLine);
-            }
-            else
-            {
-                // Non-blank line - part of a paragraph
-                if (paragraphStartLine < 0)
-                {
-                    // Start new paragraph
-                    paragraphStartLine = currentLine;
-                    paragraphStartOffset = lineStart;
-                }
-
-                // Update end offset to include this line
-                paragraphEndOffset = lineReader.Position;
-            }
-
-            currentLine++;
-        }
-
-        // Close any remaining open paragraph at end of document
-        if (paragraphStartLine >= 0)
-        {
-            var paragraph = Block.CreateParagraph(paragraphStartLine, 0);
-            paragraph.ContentStart = paragraphStartOffset;
-            paragraph.ContentEnd = paragraphEndOffset;
-            blocks.Add(paragraph);
-        }
+        // Create processor and parse blocks
+        var processor = new RefBlockProcessor(source, blockBuffer, containerBuffer, lineBoundaryBuffer);
+        var blockSpan = processor.ProcessBlocks();
 
         // Copy to array since RefMarkdownDocument needs to outlive this method
-        var blockArray = blocks.AsReadOnlySpan().ToArray();
-        return new RefMarkdownDocument(source, blockArray, blockArray.Length, currentLine);
+        var blockArray = blockSpan.ToArray();
+
+        // Count lines for the document
+        int lineCount = 0;
+        var lineReader = new RefLineReader(source);
+        while (lineReader.HasMore)
+        {
+            lineReader.ReadLine();
+            lineCount++;
+        }
+
+        return new RefMarkdownDocument(source, blockArray, blockArray.Length, lineCount);
     }
 }

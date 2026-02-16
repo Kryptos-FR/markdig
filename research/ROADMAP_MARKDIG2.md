@@ -201,19 +201,19 @@ Note: `Block` is a regular struct (not ref struct) because ref structs cannot be
 ### Phase 2: Core Block Parsing (2 weeks)
 **Goal**: Implement parsers for common block types
 
-#### 2.1 Block Parser Suite (~15 hours)
+#### 2.1 Block Parser Suite (~15 hours) ✅ COMPLETE
 Implement in `RefBlockProcessor`:
-- [ ] Heading parser (ATX style: `# Heading`)
-- [ ] Thematic break parser (`---`, `***`, `___`)
-- [ ] Fenced code block parser (`` ``` ``)
-- [ ] Indented code block parser
-- [ ] HTML block parser (basic)
-- [ ] Quote/blockquote parser
-- [ ] List parser (unordered + ordered)
-  - List items
-  - Nested lists
-  - Continuation
-- [ ] Paragraph parser (fallback)
+- [x] Heading parser (ATX style: `# Heading`)
+- [x] Thematic break parser (`---`, `***`, `___`)
+- [x] Fenced code block parser (`` ``` ``)
+- [x] Indented code block parser
+- [x] HTML block parser (basic)
+- [x] Quote/blockquote parser
+- [x] List parser (unordered + ordered)
+  - [x] List items
+  - [x] Nested lists
+  - [x] Continuation
+- [x] Paragraph parser (fallback)
 
 **Output**: Can parse real-world markdown structure
 
@@ -230,7 +230,7 @@ Implement in `RefBlockProcessor`:
 **Output**: Can parse inline content within blocks
 
 #### 2.3 Unit Tests (~8 hours)
-- [ ] Test each block parser independently
+- [x] Test each block parser independently (51 test cases, 128 tests total)
 - [ ] Test inline parsing independently
 - [ ] Test block + inline integration
 
