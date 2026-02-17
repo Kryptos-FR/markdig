@@ -236,10 +236,10 @@ Implement in `RefBlockProcessor`:
 
 Note: `Inline` is a regular struct (not ref struct) because ref structs cannot be array elements or Span<T> type parameters. Index-based approach maintains zero-copy parsing via GetContent() pattern, consistent with the `Block` struct design.
 
-#### 2.3 Unit Tests (~8 hours)
+#### 2.3 Unit Tests (~8 hours) ✅ COMPLETE
 - [x] Test each block parser independently (51 test cases, 128 tests total)
 - [x] Test inline parsing independently (54 test cases for inline parsers)
-- [ ] Test block + inline integration
+- [x] Test block + inline integration (37 integration tests)
 
 **Phase 2 Subtotal**: ~31 hours
 **Milestone**: Can parse typical markdown documents
@@ -419,7 +419,7 @@ Total Effort: ~150-160 hours (4 weeks for 1 FTE, or 8 weeks for 0.5 FTE)
 - [x] `Syntax/Inline.cs` (discriminated union struct)
 - [x] `Parsers/RefInlineProcessor.cs` (Phase 2.2 complete)
 - [x] Inline parser methods (code, links, images, emphasis, line breaks, HTML, autolinks)
-- [ ] Integration tests (block + inline combined)
+- [x] Integration tests (block + inline combined) - 37 tests
 
 ### Phase 3: Rendering
 - [ ] `Renderers/RefMarkdownRenderer.cs`
