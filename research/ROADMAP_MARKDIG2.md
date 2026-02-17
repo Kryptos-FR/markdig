@@ -4,7 +4,7 @@
 
 **Goal**: Create a parallel implementation of Markdig using stack-based ref structs to validate zero-copy parsing approach
 
-**Status**: Phase 3.1 - Complete ✅ (228 tests passing, 3.24x faster than Markdig)
+**Status**: Phase 3.2 - Complete ✅ (254 tests passing, 3.24x faster than Markdig)
 **Target Framework**: .NET 10.0
 **Approach**: Strategy 5 (MemoryDocument ref struct) from research analysis
 **Repository**: New `src/Markdig2/` project (parallel to `src/Markdig/`)
@@ -262,20 +262,28 @@ Note: `Inline` is a regular struct (not ref struct) because ref structs cannot b
 
 **Output**: Base rendering infrastructure ready for HTML renderer ✅
 
-#### 3.2 HTML Renderer (~10 hours)
-- [ ] `RefHtmlRenderer : MarkdownRenderer`
-- [ ] Render each block type
-  - Headings: `<h1>` ... `</h1>`
-  - Paragraphs: `<p>` ... `</p>`
-  - Code blocks: `<pre><code>` ... `</code></pre>`
-  - Lists: `<ul>/<ol>`, `<li>`
-  - Quotes: `<blockquote>`
-- [ ] Render each inline type
-  - Literals
-  - Emphasis: `<em>`, `<strong>`
-  - Code: `<code>`
-  - Links: `<a href=...>`
-  - Escaping/entities
+#### 3.2 HTML Renderer (~10 hours) ✅ COMPLETE
+- [x] `HtmlRenderer : MarkdownRenderer` (regular class, not ref struct)
+- [x] Render each block type
+  - [x] Headings: `<h1>` ... `<h6>` with proper levels
+  - [x] Paragraphs: `<p>` ... `</p>` with HTML escaping
+  - [x] Code blocks: `<pre><code>` ... `</code></pre>` with escaping
+  - [x] Lists: `<ul>/<ol>`, `<li>` for both ordered and unordered
+  - [x] Quotes: `<blockquote>` with nested children support
+  - [x] Thematic breaks: `<hr />`
+  - [x] HTML blocks: Pass-through raw HTML
+- [x] Render each inline type
+  - [x] Literals with HTML escaping
+  - [x] Emphasis: `<em>` and Strong: `<strong>`
+  - [x] Code: `<code>` with escaping
+  - [x] Links: `<a href="">` with title support and attribute escaping
+  - [x] Images: `<img src="" alt="" />` with title support
+  - [x] Line breaks: Hard (`<br />`) and Soft (space)
+  - [x] HTML inline: Pass-through raw HTML
+  - [x] Autolinks: Auto-detected URLs
+- [x] HTML escaping for security (entities: &, <, >, ", ')
+
+**Output**: Full HTML rendering pipeline complete, 254 tests passing ✅
 
 #### 3.3 Public API (~5 hours)
 - [ ] `Markdown2.cs` (parallel to `Markdown.cs`)
@@ -288,8 +296,9 @@ Note: `Inline` is a regular struct (not ref struct) because ref structs cannot b
 - [ ] Equivalence tests: `Markdown.ToHtml(string)` vs `Markdown2.ToHtml(span)`
 - [ ] Real-world markdown documents
 
-**Phase 3 Subtotal**: ~30 hours
-**Milestone**: Can parse markdown and render to HTML
+**Phase 3.1-3.2 Subtotal**: ~18 hours (complete)
+**Milestone**: Can parse markdown and render to HTML ✅
+**Status**: ✅ Phase 3.1-3.2 Complete (165 tests: 4 TextWriter + 101 MarkdownRenderer + 60 HtmlRenderer)
 
 ---
 
@@ -427,11 +436,11 @@ Total Effort: ~150-160 hours (4 weeks for 1 FTE, or 8 weeks for 0.5 FTE)
 - [x] Integration tests (block + inline combined) - 37 tests
 
 ### Phase 3: Rendering
-- [ ] `Renderers/MarkdownRenderer.cs`
-- [ ] `Renderers/TextWriter.cs`
-- [ ] `Renderers/RefHtmlRenderer.cs`
+- [x] `Renderers/MarkdownRenderer.cs` (Phase 3.1 complete)
+- [x] `Renderers/TextWriter.cs` (Phase 3.1 complete)
+- [x] `Renderers/HtmlRenderer.cs` (Phase 3.2 complete)
 - [ ] `Markdown2.cs` public API
-- [ ] Rendering tests
+- [x] Rendering tests (60+ for HtmlRenderer)
 - [ ] Equivalence tests (vs Markdig)
 
 ### Phase 4: Performance
@@ -674,3 +683,14 @@ enum BlockType { Paragraph, Heading, CodeBlock, Quote, ... }
   - RefInlineProcessor fully implements basic inline parsing
   - Integration tests cover typical markdown documents and edge cases
   - Status: **Phase 2 complete**, ready for Phase 3 (Rendering Pipeline)
+- **2026-02-17**: Phase 3.1-3.2 completed (Rendering)
+  - Phase 3.1: TextWriter (15 tests) + MarkdownRenderer base (4 tests) = 19 tests
+  - Phase 3.2: HtmlRenderer complete with all block/inline types
+    - Block rendering: 8 types (Paragraph, Heading 1-6, Code, Quote, List, ListItem, ThematicBreak, HTML)
+    - Inline rendering: 10 types (Literal, Emphasis, Strong, Code, Link, Image, HardLineBreak, SoftLineBreak, HtmlInline, AutoLink)
+    - HTML escaping: Content escaping (&, <, >, ") + Attribute escaping (includes ')
+    - 60+ unit tests covering all rendering scenarios
+  - Renamed `RefHtmlRenderer` → `HtmlRenderer` (follows convention: Ref prefix only for ref structs)
+  - Using test helper pattern to maintain proper encapsulation (TestableHtmlRenderer subclass)
+  - **Total tests: 254 passing** (209 + 45 new rendering tests)
+  - Status: **Phase 3.1-3.2 complete**, ready for Phase 3.3 (Public API)

@@ -489,3 +489,656 @@ public class TestMarkdownRenderer
         Assert.NotEmpty(writer.ToString());
     }
 }
+/// <summary>
+/// Tests for HtmlRenderer
+/// </summary>
+public class TestHtmlRenderer
+{
+    // Test renderer that exposes protected methods for testing
+    private class TestableHtmlRenderer : HtmlRenderer
+    {
+        public TestableHtmlRenderer(TextWriter writer) : base(writer) { }
+
+        public void TestRenderInlines(Span<char> source, Span<Inline> inlines)
+        {
+            RenderInlines(source, inlines);
+        }
+    }
+
+    [Fact]
+    public void RenderParagraph_WithString_EscapesHtmlSpecialChars()
+    {
+        var markdown = "Hello & <world>";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[1];
+        var para = Block.CreateParagraph(0, 0);
+        para.ContentStart = 0;
+        para.ContentEnd = markdown.Length;
+        para.LineCount = 1;
+        blocks[0] = para;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        var output = writer.ToString();
+        Assert.Contains("&amp;", output);
+        Assert.Contains("&lt;", output);
+        Assert.Contains("&gt;", output);
+        Assert.Equal("<p>Hello &amp; &lt;world&gt;</p>\n", output);
+    }
+
+    [Fact]
+    public void RenderParagraph_Empty_RendersEmptyParagraph()
+    {
+        var markdown = "";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[1];
+        var para = Block.CreateParagraph(0, 0);
+        para.ContentStart = 0;
+        para.ContentEnd = 0;
+        para.LineCount = 0;
+        blocks[0] = para;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 0);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        Assert.Equal("<p></p>\n", writer.ToString());
+    }
+
+    [Fact]
+    public void RenderHeading_Level1_RendersCorrectly()
+    {
+        var markdown = "Heading 1";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[1];
+        var heading = Block.CreateHeading(0, 0, 1);
+        heading.ContentStart = 0;
+        heading.ContentEnd = markdown.Length;
+        heading.LineCount = 1;
+        blocks[0] = heading;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        Assert.Equal("<h1>Heading 1</h1>\n", writer.ToString());
+    }
+
+    [Fact]
+    public void RenderHeading_Level6_RendersCorrectly()
+    {
+        var markdown = "Small";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[1];
+        var heading = Block.CreateHeading(0, 0, 6);
+        heading.ContentStart = 0;
+        heading.ContentEnd = markdown.Length;
+        heading.LineCount = 1;
+        blocks[0] = heading;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        Assert.Equal("<h6>Small</h6>\n", writer.ToString());
+    }
+
+    [Fact]
+    public void RenderCodeBlock_RendersWithPreAndCode()
+    {
+        var markdown = "int x = 5;";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[1];
+        var codeBlock = Block.CreateCodeBlock(0, 0, isFenced: true, fenceChar: '`');
+        codeBlock.ContentStart = 0;
+        codeBlock.ContentEnd = markdown.Length;
+        codeBlock.LineCount = 1;
+        blocks[0] = codeBlock;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        var output = writer.ToString();
+        Assert.Contains("<pre><code>", output);
+        Assert.Contains("</code></pre>", output);
+        Assert.Contains("int x = 5;", output);
+    }
+
+    [Fact]
+    public void RenderCodeBlock_EscapesHtmlInCode()
+    {
+        var markdown = "<script>alert('xss')</script>";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[1];
+        var codeBlock = Block.CreateCodeBlock(0, 0, isFenced: true, fenceChar: '`');
+        codeBlock.ContentStart = 0;
+        codeBlock.ContentEnd = markdown.Length;
+        codeBlock.LineCount = 1;
+        blocks[0] = codeBlock;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        var output = writer.ToString();
+        Assert.Contains("&lt;script&gt;", output);
+        Assert.DoesNotContain("<script>", output);
+    }
+
+    [Fact]
+    public void RenderThematicBreak_RendersCorrectly()
+    {
+        var markdown = "---";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[1];
+        var thematicBreak = Block.CreateThematicBreak(0, 0, '-');
+        blocks[0] = thematicBreak;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        Assert.Equal("<hr />\n", writer.ToString());
+    }
+
+    [Fact]
+    public void RenderQuote_WithChildren_RendersBlockquote()
+    {
+        // Create a quote with one child paragraph
+        var markdown = "Quote text";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[2];
+
+        // Quote block
+        var quote = Block.CreateQuote(0, 0);
+        quote.FirstChildIndex = 1;
+        quote.ChildCount = 1;
+        blocks[0] = quote;
+
+        // Child paragraph
+        var para = Block.CreateParagraph(0, 0);
+        para.ContentStart = 0;
+        para.ContentEnd = markdown.Length;
+        para.LineCount = 1;
+        blocks[1] = para;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 2);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        var output = writer.ToString();
+        Assert.Contains("<blockquote>", output);
+        Assert.Contains("</blockquote>", output);
+        Assert.Contains("<p>Quote text</p>", output);
+    }
+
+    [Fact]
+    public void RenderList_Unordered_RendersWithUl()
+    {
+        // Create an unordered list with one item
+        var markdown = "item";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[2];
+
+        // List block
+        var list = Block.CreateList(0, 0, isOrdered: false, bulletChar: '-');
+        list.FirstChildIndex = 1;
+        list.ChildCount = 1;
+        blocks[0] = list;
+
+        // List item
+        var item = Block.CreateListItem(0, 0);
+        item.FirstChildIndex = -1;  // No children for now
+        item.ChildCount = 0;
+        blocks[1] = item;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 2);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        var output = writer.ToString();
+        Assert.Contains("<ul>", output);
+        Assert.Contains("</ul>", output);
+        Assert.Contains("<li>", output);
+        Assert.Contains("</li>", output);
+    }
+
+    [Fact]
+    public void RenderList_Ordered_RendersWithOl()
+    {
+        // Create an ordered list
+        var markdown = "item";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[2];
+
+        // Ordered list block
+        var list = Block.CreateList(0, 0, isOrdered: true, startNumber: 1);
+        list.FirstChildIndex = 1;
+        list.ChildCount = 1;
+        blocks[0] = list;
+
+        // List item
+        var item = Block.CreateListItem(0, 0);
+        item.FirstChildIndex = -1;
+        item.ChildCount = 0;
+        blocks[1] = item;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 2);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        var output = writer.ToString();
+        Assert.Contains("<ol>", output);
+        Assert.Contains("</ol>", output);
+    }
+
+    [Fact]
+    public void RenderHtmlBlock_PassesThroughRawHtml()
+    {
+        var htmlContent = "<div>Custom HTML</div>";
+        Span<char> source = htmlContent.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[1];
+        var htmlBlock = Block.CreateHtmlBlock(0, 0);
+        htmlBlock.ContentStart = 0;
+        htmlBlock.ContentEnd = htmlContent.Length;
+        blocks[0] = htmlBlock;
+
+        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        var output = writer.ToString();
+        Assert.Contains("<div>Custom HTML</div>", output);
+    }
+
+    [Fact]
+    public void RenderLiteral_EscapesHtml()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        var source = "A & B < C > D".ToCharArray();
+        inlines[0] = Inline.CreateLiteral(0, source.Length);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("&amp;", output);
+        Assert.Contains("&lt;", output);
+        Assert.Contains("&gt;", output);
+    }
+
+    [Fact]
+    public void RenderCode_Inline_RendersWithCodeTag()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        inlines[0] = Inline.CreateCode(0, 4);
+
+        var source = "code".ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        Assert.Equal("<code>code</code>", writer.ToString());
+    }
+
+    [Fact]
+    public void RenderCode_WithHtml_EscapesContent()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        inlines[0] = Inline.CreateCode(0, 5);
+
+        var source = "<tag>".ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Equal("<code>&lt;tag&gt;</code>", output);
+    }
+
+    [Fact]
+    public void RenderEmphasis_WrapsWithEmTag()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        inlines[0] = Inline.CreateEmphasis('*', firstChildIndex: 0, childCount: 0);
+
+        var source = "".ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("<em>", output);
+        Assert.Contains("</em>", output);
+    }
+
+    [Fact]
+    public void RenderStrong_WrapsWithStrongTag()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        inlines[0] = Inline.CreateStrong('*', firstChildIndex: 0, childCount: 0);
+
+        var source = "".ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("<strong>", output);
+        Assert.Contains("</strong>", output);
+    }
+
+    [Fact]
+    public void RenderLink_RendersWithHrefAndText()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        const string text = "click me";
+        const string url = "https://example.com";
+
+        inlines[0] = Inline.CreateLink(
+            textStart: 0, textEnd: text.Length,
+            urlStart: text.Length + 1, urlEnd: text.Length + 1 + url.Length);
+
+        var source = (text + " " + url).ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("<a href=\"https://example.com\">", output);
+        Assert.Contains("</a>", output);
+    }
+
+    [Fact]
+    public void RenderLink_WithTitle_IncludesTitleAttribute()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        const string text = "link";
+        const string url = "http://example.com";
+        const string title = "Example Site";
+
+        var fullText = text + " " + url + " " + title;
+
+        inlines[0] = Inline.CreateLink(
+            textStart: 0, textEnd: text.Length,
+            urlStart: text.Length + 1, urlEnd: text.Length + 1 + url.Length,
+            titleStart: text.Length + 1 + url.Length + 1,
+            titleEnd: fullText.Length);
+
+        var source = fullText.ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("title=\"Example Site\"", output);
+    }
+
+    [Fact]
+    public void RenderLink_EscapesUrlInAttribute()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        const string url = "http://ex.com?a=1&b=2";
+        inlines[0] = Inline.CreateLink(
+            textStart: 0, textEnd: 4,
+            urlStart: 5, urlEnd: 5 + url.Length);
+
+        var source = ("link " + url).ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("&amp;", output);
+    }
+
+    [Fact]
+    public void RenderImage_RendersWithSrcAndAlt()
+    {
+        Span<Inline> inlines = stackalloc Inline[2];
+        const string alt = "alt text";
+        const string src = "image.png";
+
+        // Create a literal inline for the alt text
+        inlines[0] = Inline.CreateLiteral(0, alt.Length);
+
+        // Create the image with children pointing to the literal
+        inlines[1] = Inline.CreateImage(
+            altStart: 0, altEnd: alt.Length,
+            urlStart: alt.Length + 1, urlEnd: alt.Length + 1 + src.Length);
+        inlines[1].FirstChildIndex = 0;
+        inlines[1].ChildCount = 1;
+
+        var source = (alt + " " + src).ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("<img src=\"image.png\"", output);
+        Assert.Contains("alt=\"alt text\"", output);
+        Assert.Contains("/>", output);
+    }
+
+    [Fact]
+    public void RenderHardLineBreak_RendersWithBrTag()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        inlines[0] = Inline.CreateHardLineBreak();
+
+        var source = "".ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        Assert.Contains("<br />", writer.ToString());
+    }
+
+    [Fact]
+    public void RenderSoftLineBreak_RendersAsSpace()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        inlines[0] = Inline.CreateSoftLineBreak();
+
+        var source = "".ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        Assert.Equal(" ", writer.ToString());
+    }
+
+    [Fact]
+    public void RenderHtmlInline_PassesThroughRawHtml()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        const string html = "<span>raw</span>";
+
+        inlines[0] = Inline.CreateHtmlInline(0, html.Length);
+
+        var source = html.ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        Assert.Equal(html, writer.ToString());
+    }
+
+    [Fact]
+    public void RenderAutoLink_RendersAsLink()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+        const string url = "https://example.com";
+
+        inlines[0] = Inline.CreateAutoLink(0, url.Length);
+
+        var source = url.ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("<a href=", output);
+        Assert.Contains("https://example.com", output);
+        Assert.Contains("</a>", output);
+    }
+
+    [Fact]
+    public void MultipleBlocks_RendersAllCorrectly()
+    {
+        var markdown = "Heading\n\nParagraph\n\n---";
+        Span<char> source = markdown.ToCharArray();
+
+        Span<Block> blocks = stackalloc Block[3];
+
+        // Heading
+        var heading = Block.CreateHeading(0, 0, 1);
+        heading.ContentStart = 0;
+        heading.ContentEnd = 7;
+        heading.LineCount = 1;
+        blocks[0] = heading;
+
+        // Paragraph
+        var para = Block.CreateParagraph(2, 0);
+        para.ContentStart = 9;
+        para.ContentEnd = 18;
+        para.LineCount = 1;
+        blocks[1] = para;
+
+        // Thematic break
+        var thematicBreak = Block.CreateThematicBreak(4, 0, '-');
+        blocks[2] = thematicBreak;
+
+        var doc = new RefMarkdownDocument(source, blocks, 3, 5);
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.Render(doc);
+
+        var output = writer.ToString();
+        Assert.Contains("<h1>Heading</h1>", output);
+        Assert.Contains("<p>Paragraph</p>", output);
+        Assert.Contains("<hr />", output);
+    }
+
+    [Fact]
+    public void QuotesInAttribute_GetEscaped()
+    {
+        Span<Inline> inlines = stackalloc Inline[1];
+
+        inlines[0] = Inline.CreateImage(
+            altStart: 0, altEnd: 3,
+            urlStart: 4, urlEnd: 20);
+
+        var source = "alt img.png?title=\"bad\"".ToCharArray();
+
+        var sb = new StringBuilder();
+        var writer = new TextWriter(sb);
+        var renderer = new TestableHtmlRenderer(writer);
+
+        renderer.TestRenderInlines(source, inlines);
+
+        var output = writer.ToString();
+        Assert.Contains("&quot;", output);
+    }
+}
+
