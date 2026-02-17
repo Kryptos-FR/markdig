@@ -3,16 +3,16 @@
 ## Project Overview
 Markdig2 is a stack-based, low-allocation markdown parser and HTML renderer with CommonMark compliance. It uses ref structs for zero-copy parsing from `Span<char>`.
 
-**Location**: `src/Markdig2/`  
-**Tests**: `src/Markdig2.Tests/`  
-**Benchmarks**: `src/Markdig2.Benchmarks/`  
-**Roadmap**: `research/ROADMAP_MARKDIG2.md`
+**Location**: `../src/Markdig2/`  
+**Tests**: `../src/Markdig2.Tests/`  
+**Benchmarks**: `../src/Markdig2.Benchmarks/`  
+**Roadmap**: `../research/ROADMAP_MARKDIG2.md`
 
 ---
 
 ## Core Principles
 
-1. **Follow the Roadmap**: Development is divided into 5 phases. Check off completed items in [ROADMAP_MARKDIG2.md](research/ROADMAP_MARKDIG2.md) upon completion.
+1. **Follow the Roadmap**: Development is divided into 5 phases. Check off completed items in [ROADMAP_MARKDIG2.md](../research/ROADMAP_MARKDIG2.md) upon completion.
 
 2. **Tests First**: 
    - All new code must have unit tests
@@ -36,7 +36,7 @@ Markdig2 is a stack-based, low-allocation markdown parser and HTML renderer with
 ## Development Workflow
 
 ### Before Starting Work
-1. Check [ROADMAP_MARKDIG2.md](research/ROADMAP_MARKDIG2.md) for current phase
+1. Check [ROADMAP_MARKDIG2.md](../research/ROADMAP_MARKDIG2.md) for current phase
 2. Identify specific tasks to complete
 3. Create/update unit test cases for the feature
 4. Verify no tests are currently broken: `dotnet test src/Markdig2.Tests/`
@@ -52,7 +52,7 @@ Markdig2 is a stack-based, low-allocation markdown parser and HTML renderer with
    ```
    dotnet test src/Markdig2.Tests/ --verbosity normal
    ```
-2. **Update Roadmap**: Check off completed items in [ROADMAP_MARKDIG2.md](research/ROADMAP_MARKDIG2.md)
+2. **Update Roadmap**: Check off completed items in [ROADMAP_MARKDIG2.md](../research/ROADMAP_MARKDIG2.md)
 3. **Verify CommonMark compliance** (if applicable): Test against CommonMark spec
 4. **No regressions**: Ensure all previous tests still pass
 
@@ -82,6 +82,7 @@ Markdig2 is a stack-based, low-allocation markdown parser and HTML renderer with
 - ✅ Can be parameters and return values
 
 ### Design Rules
+- **Prefer ref structs**: Use `ref struct` for all types that work with spans and don't need reference semantics. If analysis shows a non-ref struct or class must be created, remove the `Ref` prefix from both the type name and roadmap documentation.
 - AST types: Use discriminated union pattern (`Block` struct with type enum)
 - Block arrays: Index-based relationships, not Span-based
 - Content access: Via `GetContent(Span<char>)` returning `RefStringView`
@@ -115,7 +116,7 @@ Markdig2 is a stack-based, low-allocation markdown parser and HTML renderer with
 - Target: 100% pass rate on supported features
 
 ### Running Tests
-```bash
+```powershell
 # Run all Markdig2 tests
 dotnet test src/Markdig2.Tests/
 
@@ -125,6 +126,8 @@ dotnet test src/Markdig2.Tests/ --filter "TestClassName"
 # Run with verbose output
 dotnet test src/Markdig2.Tests/ --verbosity detailed
 ```
+
+**Platform Note**: Use PowerShell commands on Windows (not Bash).
 
 ---
 
@@ -138,7 +141,7 @@ dotnet test src/Markdig2.Tests/ --verbosity detailed
 | 4 | Performance & optimization | ⬜ Not Started | Benchmarks |
 | 5 | Completeness & spec compliance | ⬜ Not Started | CommonMark suite |
 
-**Current Phase**: See [ROADMAP_MARKDIG2.md - Phase 2](research/ROADMAP_MARKDIG2.md#phase-2-core-block-parsing-2-weeks)
+**Current Phase**: See [ROADMAP_MARKDIG2.md - Phase 2](../research/ROADMAP_MARKDIG2.md#phase-2-core-block-parsing-2-weeks)
 
 ---
 
@@ -173,9 +176,9 @@ src/Markdig2.Tests/
 
 ## Useful References
 
-- **Architecture**: [STRATEGY_MEMORY_DOCUMENT.md](research/STRATEGY_MEMORY_DOCUMENT.md)
-- **Current Analysis**: [ANALYSIS_SPAN_SUPPORT.md](research/ANALYSIS_SPAN_SUPPORT.md)
-- **Comparison**: [ROADMAP_MARKDIG2.md - Type Mapping](research/ROADMAP_MARKDIG2.md#type-mapping-markdig--markdig2)
+- **Architecture**: [STRATEGY_MEMORY_DOCUMENT.md](../research/STRATEGY_MEMORY_DOCUMENT.md)
+- **Current Analysis**: [ANALYSIS_SPAN_SUPPORT.md](../research/ANALYSIS_SPAN_SUPPORT.md)
+- **Comparison**: [ROADMAP_MARKDIG2.md - Type Mapping](../research/ROADMAP_MARKDIG2.md#type-mapping-markdig--markdig2)
 - **Benchmarks**: `src/Markdig2.Benchmarks/` (run at end of each phase)
 - **Original Implementation**: `src/Markdig/` (reference only)
 - **CommonMark Spec**: https://spec.commonmark.org/
@@ -194,7 +197,7 @@ src/Markdig2.Tests/
 
 ## Quick Checklist for New Features
 
-- [ ] Feature described in [ROADMAP_MARKDIG2.md](research/ROADMAP_MARKDIG2.md)
+- [ ] Feature described in [ROADMAP_MARKDIG2.md](../research/ROADMAP_MARKDIG2.md)
 - [ ] Unit tests written (TDD preferred)
 - [ ] All existing tests still pass
 - [ ] New code has unit tests (100% coverage of new paths)
@@ -207,7 +210,7 @@ src/Markdig2.Tests/
 ## Getting Help
 
 If you encounter ambiguity:
-1. Refer to [ROADMAP_MARKDIG2.md](research/ROADMAP_MARKDIG2.md) for phase-specific guidance
-2. Check [STRATEGY_MEMORY_DOCUMENT.md](research/STRATEGY_MEMORY_DOCUMENT.md) for architectural context
+1. Refer to [ROADMAP_MARKDIG2.md](../research/ROADMAP_MARKDIG2.md) for phase-specific guidance
+2. Check [STRATEGY_MEMORY_DOCUMENT.md](../research/STRATEGY_MEMORY_DOCUMENT.md) for architectural context
 3. Look at existing tests in `src/Markdig2.Tests/` for patterns
 4. Compare with `src/Markdig/` for reference implementation behavior
