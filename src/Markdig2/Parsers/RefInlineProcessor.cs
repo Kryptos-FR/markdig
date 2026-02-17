@@ -14,7 +14,7 @@ namespace Markdig2.Parsers;
 /// </summary>
 public ref struct RefInlineProcessor
 {
-    private readonly Span<char> _source;
+    private readonly ReadOnlySpan<char> _source;
     private RefCollection<Inline> _inlines;
     private RefCollection<DelimiterRun> _delimiters;
 
@@ -31,7 +31,7 @@ public ref struct RefInlineProcessor
         public bool IsCloser { get; set; }
     }
 
-    public RefInlineProcessor(Span<char> source, Span<Inline> inlineBuffer, Span<DelimiterRun> delimiterBuffer)
+    public RefInlineProcessor(ReadOnlySpan<char> source, Span<Inline> inlineBuffer, Span<DelimiterRun> delimiterBuffer)
     {
         _source = source;
         _inlines = new RefCollection<Inline>(inlineBuffer);

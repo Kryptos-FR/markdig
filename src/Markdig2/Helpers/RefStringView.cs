@@ -12,7 +12,7 @@ namespace Markdig2.Helpers;
 /// </summary>
 public readonly ref struct RefStringView
 {
-    private readonly Span<char> _source;
+    private readonly ReadOnlySpan<char> _source;
     private readonly int _start;
     private readonly int _end;
 
@@ -22,11 +22,11 @@ public readonly ref struct RefStringView
     /// <param name="source">The source span of characters.</param>
     /// <param name="start">The start index (inclusive).</param>
     /// <param name="end">The end index (exclusive).</param>
-    public RefStringView(Span<char> source, int start, int end)
+    public RefStringView(ReadOnlySpan<char> source, int start, int end)
     {
         Debug.Assert(start >= 0 && start <= source.Length, "Start index out of range");
         Debug.Assert(end >= start && end <= source.Length, "End index out of range");
-        
+
         _source = source;
         _start = start;
         _end = end;
@@ -36,7 +36,7 @@ public readonly ref struct RefStringView
     /// Initializes a new instance of <see cref="RefStringView"/> that covers the entire source span.
     /// </summary>
     /// <param name="source">The source span of characters.</param>
-    public RefStringView(Span<char> source) : this(source, 0, source.Length)
+    public RefStringView(ReadOnlySpan<char> source) : this(source, 0, source.Length)
     {
     }
 
@@ -99,7 +99,7 @@ public readonly ref struct RefStringView
     {
         Debug.Assert(start >= 0 && start <= Length, "Start index out of range");
         Debug.Assert(end >= start && end <= Length, "End index out of range");
-        
+
         return new RefStringView(_source, _start + start, _start + end);
     }
 
@@ -111,15 +111,6 @@ public readonly ref struct RefStringView
     public readonly RefStringView Slice(int start)
     {
         return Slice(start, Length);
-    }
-
-    /// <summary>
-    /// Gets the underlying span for this view.
-    /// </summary>
-    /// <returns>A span covering the characters in this view.</returns>
-    public readonly Span<char> AsSpan()
-    {
-        return _source.Slice(_start, Length);
     }
 
     /// <summary>

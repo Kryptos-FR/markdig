@@ -12,7 +12,7 @@ namespace Markdig2.Helpers;
 /// </summary>
 public ref struct RefLineReader
 {
-    private readonly Span<char> _source;
+    private readonly ReadOnlySpan<char> _source;
     private int _position;
     private int _lineNumber;
 
@@ -20,7 +20,7 @@ public ref struct RefLineReader
     /// Initializes a new instance of <see cref="RefLineReader"/>.
     /// </summary>
     /// <param name="source">The source span of characters to read lines from.</param>
-    public RefLineReader(Span<char> source)
+    public RefLineReader(ReadOnlySpan<char> source)
     {
         _source = source;
         _position = 0;
@@ -67,13 +67,13 @@ public ref struct RefLineReader
         while (lineEnd < _source.Length)
         {
             char c = _source[lineEnd];
-            
+
             if (c == '\n')
             {
                 // Move past the \n
                 _position = lineEnd + 1;
                 _lineNumber++;
-                
+
                 // Check if there's a \r before the \n and handle \r\n
                 if (lineEnd > lineStart && _source[lineEnd - 1] == '\r')
                 {

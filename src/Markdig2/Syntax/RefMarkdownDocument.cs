@@ -20,7 +20,7 @@ public ref struct RefMarkdownDocument
     /// <param name="allBlocks">All parsed blocks in a flat span.</param>
     /// <param name="topLevelCount">The number of top-level blocks.</param>
     /// <param name="lineCount">The total number of lines in the source.</param>
-    public RefMarkdownDocument(Span<char> source, Span<Block> allBlocks, int topLevelCount, int lineCount)
+    public RefMarkdownDocument(ReadOnlySpan<char> source, Span<Block> allBlocks, int topLevelCount, int lineCount)
     {
         Source = source;
         AllBlocks = allBlocks;
@@ -31,7 +31,7 @@ public ref struct RefMarkdownDocument
     /// <summary>
     /// Gets the source markdown text.
     /// </summary>
-    public Span<char> Source { get; }
+    public ReadOnlySpan<char> Source { get; }
 
     /// <summary>
     /// Gets all blocks (including nested children) in a flat span.

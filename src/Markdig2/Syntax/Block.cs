@@ -354,7 +354,7 @@ public struct Block
     /// </summary>
     /// <param name="source">The source markdown text.</param>
     /// <returns>A RefStringView of the content.</returns>
-    public readonly RefStringView GetContent(Span<char> source)
+    public readonly RefStringView GetContent(ReadOnlySpan<char> source)
     {
         if (!IsLeafBlock || ContentStart >= ContentEnd)
         {
@@ -369,7 +369,7 @@ public struct Block
     /// </summary>
     /// <param name="source">The source markdown text.</param>
     /// <returns>A RefStringView of the data view.</returns>
-    public readonly RefStringView GetDataView(Span<char> source)
+    public readonly RefStringView GetDataView(ReadOnlySpan<char> source)
     {
         if (DataViewStart >= DataViewEnd)
         {
@@ -388,13 +388,13 @@ public struct Block
         {
             BlockType.Heading => $"Heading(Level={HeadingLevel}, Line={Line})",
             BlockType.Paragraph => $"Paragraph(Line={Line}, Lines={LineCount})",
-            BlockType.CodeBlock => IsFencedCodeBlock 
-                ? $"FencedCodeBlock(Line={Line}, Fence={FenceChar})" 
+            BlockType.CodeBlock => IsFencedCodeBlock
+                ? $"FencedCodeBlock(Line={Line}, Fence={FenceChar})"
                 : $"IndentedCodeBlock(Line={Line})",
             BlockType.ThematicBreak => $"ThematicBreak(Line={Line}, Char={ThematicBreakChar})",
             BlockType.Quote => $"Quote(Line={Line}, Children={ChildCount})",
-            BlockType.List => IsOrderedList 
-                ? $"OrderedList(Line={Line}, Start={ListStartNumber})" 
+            BlockType.List => IsOrderedList
+                ? $"OrderedList(Line={Line}, Start={ListStartNumber})"
                 : $"UnorderedList(Line={Line}, Bullet={BulletChar})",
             BlockType.ListItem => $"ListItem(Line={Line}, Children={ChildCount})",
             BlockType.Document => $"Document(Children={ChildCount})",

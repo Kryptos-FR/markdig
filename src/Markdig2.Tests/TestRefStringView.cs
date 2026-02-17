@@ -87,17 +87,6 @@ public class RefStringViewTests
     }
 
     [Fact]
-    public void AsSpan_ReturnsCorrectSpan()
-    {
-        Span<char> source = "Hello World".ToCharArray();
-        var view = new RefStringView(source, 6, 11);
-        var span = view.AsSpan();
-
-        Assert.Equal(5, span.Length);
-        Assert.Equal("World", new string(span));
-    }
-
-    [Fact]
     public void ToString_ReturnsCorrectString()
     {
         Span<char> source = "Hello World".ToCharArray();
@@ -230,11 +219,11 @@ public class RefStringViewTests
     {
         Span<char> source = "The quick brown fox".ToCharArray();
         var view = new RefStringView(source);
-        
+
         // Get "quick brown"
         var subview1 = view.Slice(4, 15);
         Assert.Equal("quick brown", subview1.ToString());
-        
+
         // Get "brown" from subview
         var subview2 = subview1.Slice(6, 11);
         Assert.Equal("brown", subview2.ToString());

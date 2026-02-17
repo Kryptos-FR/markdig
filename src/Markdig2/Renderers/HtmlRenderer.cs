@@ -21,7 +21,7 @@ public class HtmlRenderer : MarkdownRenderer
     {
     }
 
-    protected override void RenderParagraph(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderParagraph(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         Writer.Write("<p>");
 
@@ -34,7 +34,7 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.WriteLine("</p>");
     }
 
-    protected override void RenderHeading(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         var level = block.HeadingLevel;
         Writer.Write($"<h{level}>");
@@ -48,7 +48,7 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.WriteLine($"</h{level}>");
     }
 
-    protected override void RenderCodeBlock(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         Writer.WriteLine("<pre><code>");
 
@@ -61,14 +61,14 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.WriteLine("</code></pre>");
     }
 
-    protected override void RenderQuote(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderQuote(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         Writer.WriteLine("<blockquote>");
         RenderChildren(source, ref block, allBlocks);
         Writer.WriteLine("</blockquote>");
     }
 
-    protected override void RenderList(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         var tag = block.IsOrderedList ? "ol" : "ul";
         Writer.WriteLine($"<{tag}>");
@@ -76,19 +76,19 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.WriteLine($"</{tag}>");
     }
 
-    protected override void RenderListItem(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         Writer.Write("<li>");
         RenderChildren(source, ref block, allBlocks);
         Writer.WriteLine("</li>");
     }
 
-    protected override void RenderThematicBreak(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderThematicBreak(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         Writer.WriteLine("<hr />");
     }
 
-    protected override void RenderHtmlBlock(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderHtmlBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         if (block.ContentStart < block.ContentEnd)
         {
@@ -96,7 +96,7 @@ public class HtmlRenderer : MarkdownRenderer
         }
     }
 
-    protected override void RenderLiteral(Span<char> source, ref Inline inline)
+    protected override void RenderLiteral(ReadOnlySpan<char> source, ref Inline inline)
     {
         if (inline.ContentStart < inline.ContentEnd)
         {
@@ -105,7 +105,7 @@ public class HtmlRenderer : MarkdownRenderer
         }
     }
 
-    protected override void RenderCode(Span<char> source, ref Inline inline)
+    protected override void RenderCode(ReadOnlySpan<char> source, ref Inline inline)
     {
         Writer.Write("<code>");
         if (inline.ContentStart < inline.ContentEnd)
@@ -116,21 +116,21 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.Write("</code>");
     }
 
-    protected override void RenderEmphasis(Span<char> source, ref Inline inline, Span<Inline> allInlines)
+    protected override void RenderEmphasis(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines)
     {
         Writer.Write("<em>");
         RenderInlineChildren(source, ref inline, allInlines);
         Writer.Write("</em>");
     }
 
-    protected override void RenderStrong(Span<char> source, ref Inline inline, Span<Inline> allInlines)
+    protected override void RenderStrong(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines)
     {
         Writer.Write("<strong>");
         RenderInlineChildren(source, ref inline, allInlines);
         Writer.Write("</strong>");
     }
 
-    protected override void RenderLink(Span<char> source, ref Inline inline, Span<Inline> allInlines)
+    protected override void RenderLink(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines)
     {
         Writer.Write("<a href=\"");
         if (inline.LinkUrlStart < inline.LinkUrlEnd)
@@ -152,7 +152,7 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.Write("</a>");
     }
 
-    protected override void RenderImage(Span<char> source, ref Inline inline, Span<Inline> allInlines)
+    protected override void RenderImage(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines)
     {
         Writer.Write("<img src=\"");
         if (inline.LinkUrlStart < inline.LinkUrlEnd)
@@ -177,17 +177,17 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.Write("\" />");
     }
 
-    protected override void RenderSoftLineBreak(Span<char> source, ref Inline inline)
+    protected override void RenderSoftLineBreak(ReadOnlySpan<char> source, ref Inline inline)
     {
         Writer.Write(' ');
     }
 
-    protected override void RenderHardLineBreak(Span<char> source, ref Inline inline)
+    protected override void RenderHardLineBreak(ReadOnlySpan<char> source, ref Inline inline)
     {
         Writer.WriteLine("<br />");
     }
 
-    protected override void RenderHtmlInline(Span<char> source, ref Inline inline)
+    protected override void RenderHtmlInline(ReadOnlySpan<char> source, ref Inline inline)
     {
         if (inline.ContentStart < inline.ContentEnd)
         {
@@ -195,7 +195,7 @@ public class HtmlRenderer : MarkdownRenderer
         }
     }
 
-    protected override void RenderAutoLink(Span<char> source, ref Inline inline)
+    protected override void RenderAutoLink(ReadOnlySpan<char> source, ref Inline inline)
     {
         // AutoLink stores URL in both LinkUrlStart/LinkUrlEnd
         Writer.Write("<a href=\"");
@@ -276,7 +276,7 @@ public class HtmlRenderer : MarkdownRenderer
     /// <summary>
     /// Gets the plain text alt text for an image by extracting text from children.
     /// </summary>
-    private string GetAltText(Span<char> source, ref Inline image, Span<Inline> allInlines)
+    private string GetAltText(ReadOnlySpan<char> source, ref Inline image, Span<Inline> allInlines)
     {
         if (image.ChildCount == 0)
             return "";
@@ -296,7 +296,7 @@ public class HtmlRenderer : MarkdownRenderer
     /// <summary>
     /// Recursively collects text from an inline element and its children.
     /// </summary>
-    private void CollectTextFromInline(Span<char> source, Inline inline, Span<Inline> allInlines, System.Text.StringBuilder sb)
+    private void CollectTextFromInline(ReadOnlySpan<char> source, Inline inline, Span<Inline> allInlines, System.Text.StringBuilder sb)
     {
         switch (inline.Type)
         {

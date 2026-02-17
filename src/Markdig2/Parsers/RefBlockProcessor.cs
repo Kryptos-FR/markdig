@@ -14,13 +14,13 @@ namespace Markdig2.Parsers;
 /// </summary>
 public ref struct RefBlockProcessor
 {
-    private readonly Span<char> _source;
+    private readonly ReadOnlySpan<char> _source;
     private RefCollection<Block> _blocks;
     private RefCollection<int> _lineBoundaries; // Stores start and end index of each line
     private RefCollection<int> _containerStack;
     private int _lineCount;
 
-    public RefBlockProcessor(Span<char> source, Span<Block> blockBuffer, Span<int> containerBuffer, Span<int> lineBoundaryBuffer)
+    public RefBlockProcessor(ReadOnlySpan<char> source, Span<Block> blockBuffer, Span<int> containerBuffer, Span<int> lineBoundaryBuffer)
     {
         _source = source;
         _blocks = new RefCollection<Block>(blockBuffer);

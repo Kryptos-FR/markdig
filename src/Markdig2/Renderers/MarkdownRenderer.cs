@@ -57,7 +57,7 @@ public abstract class MarkdownRenderer
     /// <param name="source">The source markdown text.</param>
     /// <param name="block">The block to render.</param>
     /// <param name="allBlocks">All blocks in the document (for navigating children).</param>
-    protected void RenderBlock(Span<char> source, ref Block block, Span<Block> allBlocks)
+    protected void RenderBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
     {
         switch (block.Type)
         {
@@ -96,7 +96,7 @@ public abstract class MarkdownRenderer
     /// <summary>
     /// Renders child blocks of a container block.
     /// </summary>
-    protected void RenderChildren(Span<char> source, ref Block containerBlock, Span<Block> allBlocks)
+    protected void RenderChildren(ReadOnlySpan<char> source, ref Block containerBlock, Span<Block> allBlocks)
     {
         if (containerBlock.ChildCount == 0)
             return;
@@ -115,7 +115,7 @@ public abstract class MarkdownRenderer
     /// </summary>
     /// <param name="source">The source markdown text.</param>
     /// <param name="inlines">The inline elements to render.</param>
-    protected void RenderInlines(Span<char> source, Span<Inline> inlines)
+    protected void RenderInlines(ReadOnlySpan<char> source, Span<Inline> inlines)
     {
         for (int i = 0; i < inlines.Length; i++)
         {
@@ -128,7 +128,7 @@ public abstract class MarkdownRenderer
     /// <summary>
     /// Renders a single inline element.
     /// </summary>
-    protected void RenderInline(Span<char> source, ref Inline inline, Span<Inline> allInlines)
+    protected void RenderInline(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines)
     {
         switch (inline.Type)
         {
@@ -170,7 +170,7 @@ public abstract class MarkdownRenderer
     /// <summary>
     /// Renders child inlines of a container inline (like Emphasis).
     /// </summary>
-    protected void RenderInlineChildren(Span<char> source, ref Inline containerInline, Span<Inline> allInlines)
+    protected void RenderInlineChildren(ReadOnlySpan<char> source, ref Inline containerInline, Span<Inline> allInlines)
     {
         if (containerInline.ChildCount == 0)
             return;
@@ -180,24 +180,24 @@ public abstract class MarkdownRenderer
     }
 
     // Abstract methods for rendering specific block types
-    protected abstract void RenderParagraph(Span<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderHeading(Span<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderCodeBlock(Span<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderQuote(Span<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderList(Span<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderListItem(Span<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderThematicBreak(Span<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderHtmlBlock(Span<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderParagraph(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderQuote(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderThematicBreak(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderHtmlBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
 
     // Abstract methods for rendering specific inline types
-    protected abstract void RenderLiteral(Span<char> source, ref Inline inline);
-    protected abstract void RenderCode(Span<char> source, ref Inline inline);
-    protected abstract void RenderEmphasis(Span<char> source, ref Inline inline, Span<Inline> allInlines);
-    protected abstract void RenderStrong(Span<char> source, ref Inline inline, Span<Inline> allInlines);
-    protected abstract void RenderLink(Span<char> source, ref Inline inline, Span<Inline> allInlines);
-    protected abstract void RenderImage(Span<char> source, ref Inline inline, Span<Inline> allInlines);
-    protected abstract void RenderSoftLineBreak(Span<char> source, ref Inline inline);
-    protected abstract void RenderHardLineBreak(Span<char> source, ref Inline inline);
-    protected abstract void RenderHtmlInline(Span<char> source, ref Inline inline);
-    protected abstract void RenderAutoLink(Span<char> source, ref Inline inline);
+    protected abstract void RenderLiteral(ReadOnlySpan<char> source, ref Inline inline);
+    protected abstract void RenderCode(ReadOnlySpan<char> source, ref Inline inline);
+    protected abstract void RenderEmphasis(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines);
+    protected abstract void RenderStrong(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines);
+    protected abstract void RenderLink(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines);
+    protected abstract void RenderImage(ReadOnlySpan<char> source, ref Inline inline, Span<Inline> allInlines);
+    protected abstract void RenderSoftLineBreak(ReadOnlySpan<char> source, ref Inline inline);
+    protected abstract void RenderHardLineBreak(ReadOnlySpan<char> source, ref Inline inline);
+    protected abstract void RenderHtmlInline(ReadOnlySpan<char> source, ref Inline inline);
+    protected abstract void RenderAutoLink(ReadOnlySpan<char> source, ref Inline inline);
 }

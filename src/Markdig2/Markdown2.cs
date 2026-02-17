@@ -40,8 +40,7 @@ public static class Markdown2
         }
 
         // Parse the markdown
-        Span<char> mutableMarkdown = new Span<char>(markdown.ToArray());
-        var document = RefMarkdownParser.Parse(mutableMarkdown);
+        var document = RefMarkdownParser.Parse(markdown);
 
         // Render to HTML
         var builder = new StringBuilder();
@@ -63,8 +62,7 @@ public static class Markdown2
         if (markdown is null) throw new ArgumentNullException(nameof(markdown));
 
         // Parse the markdown
-        Span<char> mutableMarkdown = new Span<char>(markdown.ToArray());
-        var document = RefMarkdownParser.Parse(mutableMarkdown);
+        var document = RefMarkdownParser.Parse(markdown);
 
         // Render to HTML
         var renderer = new HtmlRenderer(writer);
@@ -86,12 +84,10 @@ public static class Markdown2
         }
 
         // Parse the markdown
-        Span<char> mutableMarkdown = new Span<char>(markdown.ToArray());
-        var document = RefMarkdownParser.Parse(mutableMarkdown);
+        var document = RefMarkdownParser.Parse(markdown);
 
         // Render to HTML
         var renderer = new HtmlRenderer(writer);
         renderer.Render(document);
     }
-
 }

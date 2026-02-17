@@ -18,7 +18,7 @@ public static class RefMarkdownParser
     /// </summary>
     /// <param name="source">The markdown source text.</param>
     /// <returns>A RefMarkdownDocument containing the parsed structure.</returns>
-    public static RefMarkdownDocument Parse(Span<char> source)
+    public static RefMarkdownDocument Parse(ReadOnlySpan<char> source)
     {
         // Use stack allocation for block collections (8KB for blocks, 1KB for container stack, 8KB for line boundaries)
         Span<Block> blockBuffer = stackalloc Block[256];
