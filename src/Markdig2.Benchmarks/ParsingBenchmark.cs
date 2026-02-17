@@ -21,35 +21,81 @@ public class ParsingBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        // Create a basic markdown document with paragraphs and blank lines
-        _markdownString = @"# Introduction
+        // Create a comprehensive markdown document with Phase 2 features:
+        // - Block types: headings, paragraphs, lists, code blocks, quotes, thematic breaks
+        // - Inline types: emphasis, strong, code spans, links, images
+        _markdownString = """
+            # Markdig2 Performance Test Document
 
-This is the first paragraph. It contains some text that spans multiple lines.
-This is still part of the first paragraph, demonstrating how consecutive lines
-are grouped together into a single block.
+            This document tests **all Phase 2 features** including *emphasis*, `code spans`, and [links](https://example.com).
 
-This is the second paragraph. It's separated from the first by a blank line.
-Markdown parsers need to handle this correctly.
+            ## Core Features
 
-## Features
+            Here are the *key capabilities* that we're benchmarking:
 
-Here are some key points:
+            - **Bold text** for emphasis
+            - `inline code` for technical terms
+            - [Hyperlinks](https://github.com) for navigation
+            - *Italic text* for subtle emphasis
 
-- Point one with some details
-- Point two with more information
-- Point three to round things out
+            ### Nested Structures
 
-Another paragraph after the list. This helps test the parser's ability to
-handle transitions between different block types.
+            We also support nested formatting like ***bold and italic*** together, and even `code with **bold**` nearby.
 
-## Conclusion
+            ## Code Blocks
 
-This is a final paragraph to wrap things up. It provides a good test case
-for measuring parsing performance and memory allocation patterns.
+            ```csharp
+            public class Example
+            {
+                public void Method()
+                {
+                    Console.WriteLine("Hello, World!");
+                }
+            }
+            ```
 
-The document is intentionally kept simple to focus on the core parsing
-infrastructure implemented in Phase 1.
-".Replace("\r\n", "\n"); // Normalize to Unix line endings
+            Another paragraph after code.
+
+            ## Blockquotes
+
+            > This is a blockquote with *emphasis*.
+            > It can span multiple lines.
+            > > And even nest with **strong** text.
+
+            Back to normal paragraphs with links to [documentation](https://spec.commonmark.org).
+
+            ## Lists and More
+
+            1. First ordered item with `code`
+            2. Second item with [a link](url)
+            3. Third item with **strong emphasis**
+
+            Followed by unordered:
+
+            - Item with *italic*
+            - Another item
+              - Nested item with `code`
+              - Another nested item
+
+            ---
+
+            ## Advanced Inline Elements
+
+            Visit <http://example.com> or email <user@example.com> for more information.
+
+            Text with hard line break:  
+            Next line here.
+
+            ## Final Section
+
+            This comprehensive document exercises:
+            - All **block types**: headings, paragraphs, lists, code, quotes, thematic breaks
+            - All **inline types**: emphasis, strong, code spans, links, images, autolinks, line breaks
+            - Realistic **nesting** and **mixed content**
+
+            The goal is to measure performance on documents similar to real-world markdown files.
+
+            """.Replace("\r\n", "\n"); // Normalize to Unix line endings
 
         _markdownChars = _markdownString.ToCharArray();
     }
@@ -65,7 +111,7 @@ infrastructure implemented in Phase 1.
     {
         Span<char> source = _markdownChars;
         var doc = RefMarkdownParser.Parse(source);
-        
+
         // Access the document to ensure it's not optimized away
         _ = doc.TotalBlockCount;
         _ = doc.LineCount;
