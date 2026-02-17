@@ -4,7 +4,7 @@
 
 **Goal**: Create a parallel implementation of Markdig using stack-based ref structs to validate zero-copy parsing approach
 
-**Status**: Phase 2 - Complete ✅ (209 tests passing, 3.24x faster than Markdig)
+**Status**: Phase 3.1 - Complete ✅ (228 tests passing, 3.24x faster than Markdig)
 **Target Framework**: .NET 10.0
 **Approach**: Strategy 5 (MemoryDocument ref struct) from research analysis
 **Repository**: New `src/Markdig2/` project (parallel to `src/Markdig/`)
@@ -81,9 +81,9 @@ src/
     │   └── ...
     │
     ├── Renderers/
-    │   ├── RefMarkdownRenderer.cs      (Base streaming renderer)
+    │   ├── MarkdownRenderer.cs         (Base streaming renderer)
     │   ├── RefHtmlRenderer.cs          (HTML output)
-    │   └── RefTextWriter.cs            (Simplified writer)
+    │   └── TextWriter.cs               (Simplified writer)
     │
     └── Markdown2.cs            (Public API - similar to Markdown.cs)
 
@@ -126,9 +126,9 @@ tests/
 
 | Markdig | Markdig2 | Notes |
 |---------|----------|-------|
-| N/A | `RefMarkdownRenderer` (abstract) | Streaming visitor pattern |
+| N/A | `MarkdownRenderer` (abstract) | Streaming visitor pattern |
 | `HtmlRenderer` (class) | `RefHtmlRenderer` (ref struct) | HTML streaming output |
-| `TextWriter` (framework) | `RefTextWriter` (struct wrapper) | Track and write output |
+| `TextWriter` (framework) | `TextWriter` (struct wrapper) | Track and write output |
 
 ---
 
@@ -249,16 +249,21 @@ Note: `Inline` is a regular struct (not ref struct) because ref structs cannot b
 ### Phase 3: Rendering Pipeline (1 week)
 **Goal**: Convert parsed tree to HTML output
 
-#### 3.1 Renderer Base (~8 hours)
-- [ ] `RefMarkdownRenderer` abstract ref struct
+#### 3.1 Renderer Base (~8 hours) ✅ COMPLETED
+- [x] `TextWriter` struct wrapper
+  - Buffered string output (StringBuilder backed)
+  - Track position (column) and newline state
+  - 15 unit tests covering all write operations
+- [x] `MarkdownRenderer` abstract base class (not struct)
   - Visitor pattern for tree traversal
-  - Push/pop context on recursion
-- [ ] `RefTextWriter` wrapper
-  - Buffered string output
-  - Track position for source maps (optional)
+  - Context management (IsFirstInContainer, IsLastInContainer)
+  - Abstract methods for rendering blocks and inlines
+  - 4 unit tests with TestRenderer implementation
+
+**Output**: Base rendering infrastructure ready for HTML renderer ✅
 
 #### 3.2 HTML Renderer (~10 hours)
-- [ ] `RefHtmlRenderer : RefMarkdownRenderer`
+- [ ] `RefHtmlRenderer : MarkdownRenderer`
 - [ ] Render each block type
   - Headings: `<h1>` ... `</h1>`
   - Paragraphs: `<p>` ... `</p>`
@@ -422,8 +427,8 @@ Total Effort: ~150-160 hours (4 weeks for 1 FTE, or 8 weeks for 0.5 FTE)
 - [x] Integration tests (block + inline combined) - 37 tests
 
 ### Phase 3: Rendering
-- [ ] `Renderers/RefMarkdownRenderer.cs`
-- [ ] `Renderers/RefTextWriter.cs`
+- [ ] `Renderers/MarkdownRenderer.cs`
+- [ ] `Renderers/TextWriter.cs`
 - [ ] `Renderers/RefHtmlRenderer.cs`
 - [ ] `Markdown2.cs` public API
 - [ ] Rendering tests
