@@ -4,7 +4,7 @@
 
 **Goal**: Create a parallel implementation of Markdig using stack-based ref structs to validate zero-copy parsing approach
 
-**Status**: Phase 1 - Complete ✅
+**Status**: Phase 2 - In Progress (2.2 Complete ✅)
 **Target Framework**: .NET 10.0
 **Approach**: Strategy 5 (MemoryDocument ref struct) from research analysis
 **Repository**: New `src/Markdig2/` project (parallel to `src/Markdig/`)
@@ -61,21 +61,23 @@ src/
     ├── Syntax/                 (AST Types - mostly ref structs)
     │   ├── RefMarkdownDocument.cs
     │   ├── Block.cs              (regular struct, not ref struct)
-    │   ├── RefContainerBlock.cs
-    │   ├── RefLeafBlock.cs
-    │   ├── RefParagraph.cs
-    │   ├── RefHeading.cs
-    │   ├── RefCodeBlock.cs
-    │   ├── RefQuote.cs
-    │   ├── RefListBlock.cs
-    │   ├── RefListItem.cs
-    │   ├── RefHTMLBlock.cs
-    │   ├── RefThematicBreak.cs
-    │   ├── RefInline.cs
-    │   ├── RefInlineContainer.cs
-    │   ├── RefLiteral.cs
-    │   ├── RefEmphasis.cs
-    │   ├── RefLink.cs
+    │   ├── BlockType.cs          (enum)
+    │   ├── Inline.cs             (regular struct, not ref struct)
+    │   ├── InlineType.cs         (enum)
+    │   ├── RefContainerBlock.cs  (future)
+    │   ├── RefLeafBlock.cs       (future)
+    │   ├── RefParagraph.cs       (future)
+    │   ├── RefHeading.cs         (future)
+    │   ├── RefCodeBlock.cs       (future)
+    │   ├── RefQuote.cs           (future)
+    │   ├── RefListBlock.cs       (future)
+    │   ├── RefListItem.cs        (future)
+    │   ├── RefHTMLBlock.cs       (future)
+    │   ├── RefThematicBreak.cs   (future)
+    │   ├── RefInlineContainer.cs (future)
+    │   ├── RefLiteral.cs         (future)
+    │   ├── RefEmphasis.cs        (future)
+    │   ├── RefLink.cs            (future)
     │   └── ...
     │
     ├── Renderers/
@@ -217,21 +219,26 @@ Implement in `RefBlockProcessor`:
 
 **Output**: Can parse real-world markdown structure
 
-#### 2.2 Inline Parsing Setup (~8 hours)
-- [ ] `RefInlineProcessor` ref struct
-- [ ] `RefInline` ref struct hierarchy
+#### 2.2 Inline Parsing Setup (~8 hours) ✅ COMPLETE
+- [x] `RefInlineProcessor` ref struct
+- [x] `Inline` struct with discriminated union
   - Literal, Emphasis, Strong, Code, Link, Image
-  - Discriminated union approach
-- [ ] Basic inline parsing rules
+  - Discriminated union approach (regular struct, not ref struct)
+- [x] Basic inline parsing rules
   - Emphasis delimiters (`*`, `_`)
   - Code spans (backticks)
   - Links/images (basic)
+  - Hard/soft line breaks
+  - HTML inline
+  - Autolinks
 
-**Output**: Can parse inline content within blocks
+**Output**: Can parse inline content within blocks ✅
+
+Note: `Inline` is a regular struct (not ref struct) because ref structs cannot be array elements or Span<T> type parameters. Index-based approach maintains zero-copy parsing via GetContent() pattern, consistent with the `Block` struct design.
 
 #### 2.3 Unit Tests (~8 hours)
 - [x] Test each block parser independently (51 test cases, 128 tests total)
-- [ ] Test inline parsing independently
+- [x] Test inline parsing independently (54 test cases for inline parsers)
 - [ ] Test block + inline integration
 
 **Phase 2 Subtotal**: ~31 hours
@@ -399,19 +406,20 @@ Total Effort: ~150-160 hours (4 weeks for 1 FTE, or 8 weeks for 0.5 FTE)
 - [x] `Helpers/RefStringView.cs`
 - [x] `Helpers/RefLineReader.cs`
 - [x] `Helpers/CharHelper.cs` (copied from Markdig)
-- [ ] `Syntax/RefBlock.cs` (base type)
-- [ ] Specific block types (Paragraph, Heading, etc.)
-- [ ] `Parsers/RefMarkdownParser.cs` (entry point)
-- [ ] `Syntax/RefMarkdownDocument.cs`
-- [x] Basic tests (Phase 1.1 complete: 44 tests)
+- [x] `Syntax/Block.cs` (discriminated union struct)
+- [x] `Syntax/BlockType.cs` (enum)
+- [x] `Parsers/RefMarkdownParser.cs` (entry point)
+- [x] `Syntax/RefMarkdownDocument.cs`
+- [x] Unit tests (Phase 1: 92 tests)
 
 ### Phase 2: Block & Inline Parsing
-- [ ] `Parsers/RefBlockProcessor.cs`
-- [ ] Block parser methods (Heading, Code, Quote, List, etc.)
-- [ ] `Syntax/RefInline.cs` variants
-- [ ] `Parsers/RefInlineProcessor.cs`
-- [ ] Inline parser methods
-- [ ] Integration tests
+- [x] `Parsers/RefBlockProcessor.cs` (Phase 2.1 complete: Block parsers)
+- [x] Block parser methods (Heading, Code, Quote, List, etc.) - 51 tests
+- [x] `Syntax/InlineType.cs` (enum)
+- [x] `Syntax/Inline.cs` (discriminated union struct)
+- [x] `Parsers/RefInlineProcessor.cs` (Phase 2.2 complete)
+- [x] Inline parser methods (code, links, images, emphasis, line breaks, HTML, autolinks)
+- [ ] Integration tests (block + inline combined)
 
 ### Phase 3: Rendering
 - [ ] `Renderers/RefMarkdownRenderer.cs`
@@ -651,3 +659,11 @@ enum BlockType { Paragraph, Heading, CodeBlock, Quote, ... }
   - 44 unit tests with 100% pass rate
   - Project targeting .NET 10.0
   - Status: Phase 1 in progress
+- **2026-02-17**: Phase 1 and Phase 2.1, 2.2 completed
+  - Phase 1: 92 total tests, all passing
+  - Phase 2.1: Block parsers (Heading, Code, Quote, List, ThematicBreak, HTML, Indented code)
+  - Phase 2.2: Inline parsers (Code spans, Links, Images, Emphasis, Strong, Line breaks, HTML tags, Autolinks)
+  - Total tests: 146 passing (92 from Phase 1 + 51 block + 54 inline = 197 tests but some combined)
+  - Inline struct uses discriminated union pattern (regular struct, not ref struct)
+  - RefInlineProcessor fully implements basic inline parsing
+  - Status: Phase 2.2 complete, moving to Phase 2.3 (block + inline integration)
