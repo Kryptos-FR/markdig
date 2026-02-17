@@ -85,6 +85,9 @@ public abstract class MarkdownRenderer
             case BlockType.HtmlBlock:
                 RenderHtmlBlock(source, ref block, allBlocks);
                 break;
+            case BlockType.BlankLine:
+                // Blank lines are typically skipped in rendering
+                break;
             default:
                 throw new ArgumentException($"Unknown block type: {block.Type}");
         }

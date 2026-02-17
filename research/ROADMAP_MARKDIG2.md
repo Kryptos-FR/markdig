@@ -4,7 +4,7 @@
 
 **Goal**: Create a parallel implementation of Markdig using stack-based ref structs to validate zero-copy parsing approach
 
-**Status**: Phase 3.2 - Complete ✅ (254 tests passing, 3.24x faster than Markdig)
+**Status**: Phase 3.3 - Complete with CRITICAL GAP ⚠️ (278 tests passing but inlines NOT connected to rendering)
 **Target Framework**: .NET 10.0
 **Approach**: Strategy 5 (MemoryDocument ref struct) from research analysis
 **Repository**: New `src/Markdig2/` project (parallel to `src/Markdig/`)
@@ -285,20 +285,52 @@ Note: `Inline` is a regular struct (not ref struct) because ref structs cannot b
 
 **Output**: Full HTML rendering pipeline complete, 254 tests passing ✅
 
-#### 3.3 Public API (~5 hours)
-- [ ] `Markdown2.cs` (parallel to `Markdown.cs`)
-  - `ToHtml(Span<char>)` → `string`
-  - `Parse(Span<char>)` → `RefMarkdownDocument`
-  - `ToPlainText(Span<char>)` → `string` (optional)
+#### 3.3 Public API (~5 hours) ✅ COMPLETE
+- [x] `Markdown2.cs` (parallel to `Markdown.cs`)
+  - [x] `ToHtml(string)` → `string`
+  - [x] `ToHtml(ReadOnlySpan<char>)` → `string`
+  - [x] `ToHtml(string, TextWriter)` → void (write to writer)
+  - [x] `ToHtml(ReadOnlySpan<char>, TextWriter)` → void (write to writer)
+- ⚠️ **KNOWN GAP**: Inlines are NOT connected to rendering
+  - RefInlineProcessor exists and can parse inlines
+  - **BUT**: No storage for parsed inlines in RefMarkdownDocument
+  - **BUT**: Block struct has no fields (FirstInlineIndex, InlineCount) to reference inlines
+  - **BUT**: HtmlRenderer just escapes raw text instead of rendering parsed inline elements
+  - **Result**: `*italic*` renders as `*italic*` instead of `<em>italic</em>`
+  - **Impact**: All inline formatting (emphasis, strong, code, links, images) does NOT render correctly
+  - **Status**: Tests pass because they only validate raw text escaping, not semantic correctness
+  - **Fix Required**: Phase 3.4 to wire up inline parsing/storage/rendering
 
-#### 3.4 Rendering Tests (~7 hours)
-- [ ] HTML output tests
+#### 3.4 Inline Integration (~10 hours) ⬜ NEW
+- [ ] Extend `RefMarkdownDocument` to store parsed inlines (flat array)
+- [ ] Add fields to `Block` struct
+  - [ ] `FirstInlineIndex` (int) - index of first inline in document's inline array
+  - [ ] `InlineCount` (int) - number of inlines in this leaf block
+- [ ] Implement inline parsing phase in `RefMarkdownParser`
+  - [ ] After block parsing completes
+  - [ ] For each leaf block (Paragraph, Heading, etc.)
+  - [ ] Call `RefInlineProcessor.ProcessInlines()` and store results
+  - [ ] Update block's `FirstInlineIndex` and `InlineCount`
+- [ ] Update `HtmlRenderer` to render inlines
+  - [ ] For each block with content, render parsed inlines instead of raw text
+  - [ ] Properly handle emphasis, strong, code, links, images, line breaks
+- [ ] Create/update tests to verify inline rendering
+  - [ ] Test `*italic*` → `<em>italic</em>`
+  - [ ] Test `**bold**` → `<strong>bold</strong>`
+  - [ ] Test inline code, links, images, etc.
+  - [ ] Equivalence tests vs original Markdig
+
+**Phase 3.3-3.4 Subtotal**: ~33 hours (3.3 complete, 3.4 planned)
+**Milestone**: Full markdown → HTML with complete inline support
+**Status**: 3.3 APIs available but incomplete semantics (⚠️ BUG); 3.4 pending
+
+#### 3.5 Rendering Tests (~7 hours)
+- [ ] HTML output correctness tests
 - [ ] Equivalence tests: `Markdown.ToHtml(string)` vs `Markdown2.ToHtml(span)`
 - [ ] Real-world markdown documents
 
-**Phase 3.1-3.2 Subtotal**: ~18 hours (complete)
-**Milestone**: Can parse markdown and render to HTML ✅
-**Status**: ✅ Phase 3.1-3.2 Complete (165 tests: 4 TextWriter + 101 MarkdownRenderer + 60 HtmlRenderer)
+**Milestone**: Full public API with parse + render pipeline ✅
+**Status**: ✅ Phase 3.1-3.3 Complete (278 tests: 4 TextWriter + 101 MarkdownRenderer + 60 HtmlRenderer + 24 Markdown2 API + 89 integration)
 
 ---
 
@@ -683,7 +715,7 @@ enum BlockType { Paragraph, Heading, CodeBlock, Quote, ... }
   - RefInlineProcessor fully implements basic inline parsing
   - Integration tests cover typical markdown documents and edge cases
   - Status: **Phase 2 complete**, ready for Phase 3 (Rendering Pipeline)
-- **2026-02-17**: Phase 3.1-3.2 completed (Rendering)
+- **2026-02-17**: Phase 3.1-3.3 completed with CRITICAL GAP IDENTIFIED
   - Phase 3.1: TextWriter (15 tests) + MarkdownRenderer base (4 tests) = 19 tests
   - Phase 3.2: HtmlRenderer complete with all block/inline types
     - Block rendering: 8 types (Paragraph, Heading 1-6, Code, Quote, List, ListItem, ThematicBreak, HTML)
@@ -692,5 +724,20 @@ enum BlockType { Paragraph, Heading, CodeBlock, Quote, ... }
     - 60+ unit tests covering all rendering scenarios
   - Renamed `RefHtmlRenderer` → `HtmlRenderer` (follows convention: Ref prefix only for ref structs)
   - Using test helper pattern to maintain proper encapsulation (TestableHtmlRenderer subclass)
-  - **Total tests: 254 passing** (209 + 45 new rendering tests)
-  - Status: **Phase 3.1-3.2 complete**, ready for Phase 3.3 (Public API)
+  - Phase 3.3: Public API (Markdown2.cs with 24 new tests)
+    - Static methods: `ToHtml(string)` and `ToHtml(ReadOnlySpan<char>)` return HTML string
+    - Overloads with `TextWriter` parameter for streaming output
+    - BlankLine block type now handled in renderer (skipped in output)
+    - Entry points for parsing and rendering complete
+    - 24 comprehensive API tests covering empty input, multiple block types, HTML escaping, and edge cases
+  - **Total tests: 278 passing** (254 rendering + 24 public API)
+  - ⚠️ **CRITICAL GAP DISCOVERED**: Inlines are parsed but NOT connected to rendering
+    - RefInlineProcessor can parse inlines correctly (Phase 2.2)
+    - **BUT** no storage in RefMarkdownDocument for parsed inlines
+    - **BUT** Block struct has no fields to reference inlines (FirstInlineIndex, InlineCount)
+    - **BUT** HtmlRenderer renders raw text instead of parsed inline elements
+    - **Impact**: `*italic*` renders as `*italic*` instead of `<em>italic</em>`
+    - **Root Cause**: Architecture gap between Phase 2 (inline parsing) and Phase 3 (rendering)
+    - **Tests Pass BUT Are Incomplete**: Tests validate HTML escaping of raw text, not semantic correctness
+    - **Fix Required**: Phase 3.4 to connect inlines to document structure and rendering
+  - Status: **Phase 3.1-3.3 APIs complete but semantically incomplete**; **Phase 3.4 required**

@@ -1142,3 +1142,268 @@ public class TestHtmlRenderer
     }
 }
 
+/// <summary>
+/// Tests for Markdown2 public API
+/// </summary>
+public class TestMarkdown2PublicApi
+{
+    [Fact]
+    public void ToHtml_EmptyString_ReturnsEmptyString()
+    {
+        var result = Markdown2.ToHtml(string.Empty);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void ToHtml_Paragraph_ReturnsHtml()
+    {
+        var result = Markdown2.ToHtml("Hello world");
+        Assert.Contains("<p>", result);
+        Assert.Contains("Hello world", result);
+        Assert.Contains("</p>", result);
+    }
+
+    [Fact]
+    public void ToHtml_Heading_ReturnsHtml()
+    {
+        var result = Markdown2.ToHtml("# Heading");
+        Assert.Contains("<h1>", result);
+        Assert.Contains("Heading", result);
+        Assert.Contains("</h1>", result);
+    }
+
+    [Fact]
+    public void ToHtml_MultipleHeadingLevels_ReturnsCorrectTags()
+    {
+        var markdown = "# H1\n## H2\n### H3";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<h1>H1</h1>", result);
+        Assert.Contains("<h2>H2</h2>", result);
+        Assert.Contains("<h3>H3</h3>", result);
+    }
+
+    [Fact]
+    public void ToHtml_CodeBlock_ReturnsHtml()
+    {
+        var markdown = "    code line";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<pre>", result);
+        Assert.Contains("<code>", result);
+        Assert.Contains("code line", result);
+        Assert.Contains("</code>", result);
+        Assert.Contains("</pre>", result);
+    }
+
+    [Fact]
+    public void ToHtml_ThematicBreak_ReturnsHtml()
+    {
+        var markdown = "---";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<hr />", result);
+    }
+
+    [Fact]
+    public void ToHtml_HtmlBlock_PassesThroughRaw()
+    {
+        var markdown = "<div>Raw HTML</div>";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<div>Raw HTML</div>", result);
+    }
+
+    [Fact]
+    public void ToHtml_EscapesHtml_InContent()
+    {
+        var markdown = "Hello <world>";
+        var result = Markdown2.ToHtml(markdown);
+
+        // Content is escaped (raw text, no parsing yet)
+        Assert.Contains("&lt;world&gt;", result);
+        Assert.DoesNotContain("<world>", result);
+    }
+
+    [Fact]
+    public void ToHtml_EscapesAmpersand_InContent()
+    {
+        var markdown = "Tom & Jerry";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("Tom &amp; Jerry", result);
+        Assert.DoesNotContain("Tom & Jerry", result);
+    }
+
+    [Fact]
+    public void ToHtml_EscapesQuote_InContent()
+    {
+        var markdown = "He said \"hello\"";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("&quot;hello&quot;", result);
+    }
+
+    [Fact]
+    public void ToHtml_WithReadOnlySpan_Works()
+    {
+        ReadOnlySpan<char> markdown = "# Heading";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<h1>Heading</h1>", result);
+    }
+
+    [Fact]
+    public void ToHtml_WithReadOnlySpan_EmptySpan_ReturnsEmpty()
+    {
+        ReadOnlySpan<char> markdown = "".AsSpan();
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void ToHtml_WithTextWriterParameter_WritesToWriter()
+    {
+        var sb = new StringBuilder();
+        var writer = new Markdig2.Renderers.TextWriter(sb);
+
+        Markdown2.ToHtml("# Hello", writer);
+
+        var output = writer.ToString();
+        Assert.Contains("<h1>Hello</h1>", output);
+    }
+
+    [Fact]
+    public void ToHtml_WithTextWriterAndReadOnlySpan_WritesToWriter()
+    {
+        var sb = new StringBuilder();
+        var writer = new Markdig2.Renderers.TextWriter(sb);
+        ReadOnlySpan<char> markdown = "## Sub Heading";
+
+        Markdown2.ToHtml(markdown, writer);
+
+        var output = writer.ToString();
+        Assert.Contains("<h2>Sub Heading</h2>", output);
+    }
+
+    [Fact]
+    public void ToHtml_WithTextWriterAndEmptySpan_NoOutput()
+    {
+        var sb = new StringBuilder();
+        var writer = new Markdig2.Renderers.TextWriter(sb);
+        ReadOnlySpan<char> markdown = "".AsSpan();
+
+        Markdown2.ToHtml(markdown, writer);
+
+        Assert.Equal(0, sb.Length);
+    }
+
+    [Fact]
+    public void ToHtml_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => Markdown2.ToHtml((string)null!));
+    }
+
+    [Fact]
+    public void ToHtml_MultipleParagraphs_Works()
+    {
+        var markdown = "First paragraph\n\nSecond paragraph";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<p>First paragraph</p>", result);
+        Assert.Contains("<p>Second paragraph</p>", result);
+    }
+
+    [Fact]
+    public void ToHtml_Mixed_AllHeadingLevels_Works()
+    {
+        var markdown = "#### H4\n##### H5\n###### H6";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<h4>H4</h4>", result);
+        Assert.Contains("<h5>H5</h5>", result);
+        Assert.Contains("<h6>H6</h6>", result);
+    }
+
+    [Fact]
+    public void ToHtml_MultilineCodeBlock_Preserved()
+    {
+        var markdown = "    line 1\n    line 2\n    line 3";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<code>", result);
+        Assert.Contains("line 1", result);
+        Assert.Contains("line 2", result);
+        Assert.Contains("line 3", result);
+    }
+
+    [Fact]
+    public void ToHtml_DocumentWithVariousBlocks_Works()
+    {
+        var markdown = @"# Title
+
+Paragraph text
+
+    code block
+
+---
+
+## Section";
+
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<h1>Title</h1>", result);
+        Assert.Contains("<p>Paragraph text</p>", result);
+        Assert.Contains("<pre>", result);
+        Assert.Contains("<code>", result);
+        Assert.Contains("code block", result);
+        Assert.Contains("<hr />", result);
+        Assert.Contains("<h2>Section</h2>", result);
+    }
+
+    [Fact]
+    public void ToHtml_SpecialCharactersEscaped_Consistently()
+    {
+        var markdown = "Content with < > \" ' &";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("&lt;", result);
+        Assert.Contains("&gt;", result);
+        Assert.Contains("&quot;", result);
+        Assert.Contains("&amp;", result);
+    }
+
+    [Fact]
+    public void ToHtml_HeadingWithSpecialChars_EscapesCorrectly()
+    {
+        var markdown = "# Heading with <special> chars";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<h1>", result);
+        Assert.Contains("&lt;special&gt;", result);
+        Assert.Contains("</h1>", result);
+    }
+
+    [Fact]
+    public void ToHtml_ConsecutiveThematicBreaks_Works()
+    {
+        var markdown = "---\n\n---";
+        var result = Markdown2.ToHtml(markdown);
+
+        // Should have two thematic breaks
+        var count = result.Split("<hr />", StringSplitOptions.None).Length - 1;
+        Assert.Equal(2, count);
+    }
+
+    [Fact]
+    public void ToHtml_BlankLinesBetweenBlocks_Handled()
+    {
+        var markdown = "# Heading\n\n\nParagraph";
+        var result = Markdown2.ToHtml(markdown);
+
+        Assert.Contains("<h1>Heading</h1>", result);
+        Assert.Contains("<p>Paragraph</p>", result);
+    }
+}
+
