@@ -10,7 +10,8 @@ using Markdig2.Parsers;
 namespace Markdig2.Benchmarks;
 
 /// <summary>
-/// Benchmark comparing Markdig (original) vs Markdig2 (ref struct) parsing performance.
+/// Benchmark comparing Markdig (original) vs Markdig2 (ref struct) parsing and rendering performance.
+/// Includes both parse-only and full parse+render (ToHtml) benchmarks.
 /// </summary>
 [MemoryDiagnoser]
 public class ParsingBenchmark
@@ -115,5 +116,24 @@ public class ParsingBenchmark
         // Access the document to ensure it's not optimized away
         _ = doc.TotalBlockCount;
         _ = doc.LineCount;
+    }
+
+    [Benchmark(Description = "Markdig ToHtml (Parse+Render)")]
+    public string Markdig_ToHtml()
+    {
+        return Markdig.Markdown.ToHtml(_markdownString);
+    }
+
+    [Benchmark(Description = "Markdig2 ToHtml String (Parse+Render)")]
+    public string Markdig2_ToHtml_String()
+    {
+        return Markdown2.ToHtml(_markdownString);
+    }
+
+    [Benchmark(Description = "Markdig2 ToHtml Span (Parse+Render)")]
+    public string Markdig2_ToHtml_Span()
+    {
+        ReadOnlySpan<char> source = _markdownChars;
+        return Markdown2.ToHtml(source);
     }
 }
