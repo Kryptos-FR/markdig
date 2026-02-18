@@ -221,7 +221,7 @@ public class TestMarkdownRenderer
     {
         public TestRenderer(TextWriter writer) : base(writer) { }
 
-        protected override void RenderParagraph(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+        protected override void RenderParagraph(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
         {
             Writer.Write("<p>");
             if (block.ContentStart < block.ContentEnd)
@@ -231,7 +231,7 @@ public class TestMarkdownRenderer
             Writer.WriteLine("</p>");
         }
 
-        protected override void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+        protected override void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
         {
             var level = block.HeadingLevel;
             Writer.Write($"<h{level}>");
@@ -242,7 +242,7 @@ public class TestMarkdownRenderer
             Writer.WriteLine($"</h{level}>");
         }
 
-        protected override void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+        protected override void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
         {
             Writer.Write("<pre><code>");
             if (block.ContentStart < block.ContentEnd)
@@ -252,34 +252,34 @@ public class TestMarkdownRenderer
             Writer.WriteLine("</code></pre>");
         }
 
-        protected override void RenderQuote(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+        protected override void RenderQuote(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
         {
             Writer.WriteLine("<blockquote>");
-            RenderChildren(source, ref block, allBlocks);
+            RenderChildren(source, ref block, allBlocks, allInlines);
             Writer.WriteLine("</blockquote>");
         }
 
-        protected override void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+        protected override void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
         {
             var tag = block.IsOrderedList ? "ol" : "ul";
             Writer.WriteLine($"<{tag}>");
-            RenderChildren(source, ref block, allBlocks);
+            RenderChildren(source, ref block, allBlocks, allInlines);
             Writer.WriteLine($"</{tag}>");
         }
 
-        protected override void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+        protected override void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
         {
             Writer.Write("<li>");
-            RenderChildren(source, ref block, allBlocks);
+            RenderChildren(source, ref block, allBlocks, allInlines);
             Writer.WriteLine("</li>");
         }
 
-        protected override void RenderThematicBreak(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+        protected override void RenderThematicBreak(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
         {
             Writer.WriteLine("<hr>");
         }
 
-        protected override void RenderHtmlBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+        protected override void RenderHtmlBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
         {
             if (block.ContentStart < block.ContentEnd)
             {
@@ -383,7 +383,7 @@ public class TestMarkdownRenderer
         Span<char> source = "".ToCharArray();
         Span<Block> blocks = stackalloc Block[0];
 
-        var doc = new RefMarkdownDocument(source, blocks, 0, 0);
+        var doc = new RefMarkdownDocument(source, blocks, 0, Array.Empty<Inline>(), 0);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -407,7 +407,7 @@ public class TestMarkdownRenderer
         para.LineCount = 1;
         blocks[0] = para;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -438,7 +438,7 @@ public class TestMarkdownRenderer
         para2.LineCount = 1;
         blocks[1] = para2;
 
-        var doc = new RefMarkdownDocument(source, blocks, 2, 3);
+        var doc = new RefMarkdownDocument(source, blocks, 2, Array.Empty<Inline>(), 3);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -477,7 +477,7 @@ public class TestMarkdownRenderer
         para3.LineCount = 1;
         blocks[2] = para3;
 
-        var doc = new RefMarkdownDocument(source, blocks, 3, 5);
+        var doc = new RefMarkdownDocument(source, blocks, 3, Array.Empty<Inline>(), 5);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -518,7 +518,7 @@ public class TestHtmlRenderer
         para.LineCount = 1;
         blocks[0] = para;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -546,7 +546,7 @@ public class TestHtmlRenderer
         para.LineCount = 0;
         blocks[0] = para;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 0);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 0);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -570,7 +570,7 @@ public class TestHtmlRenderer
         heading.LineCount = 1;
         blocks[0] = heading;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -594,7 +594,7 @@ public class TestHtmlRenderer
         heading.LineCount = 1;
         blocks[0] = heading;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -618,7 +618,7 @@ public class TestHtmlRenderer
         codeBlock.LineCount = 1;
         blocks[0] = codeBlock;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -645,7 +645,7 @@ public class TestHtmlRenderer
         codeBlock.LineCount = 1;
         blocks[0] = codeBlock;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -668,7 +668,7 @@ public class TestHtmlRenderer
         var thematicBreak = Block.CreateThematicBreak(0, 0, '-');
         blocks[0] = thematicBreak;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -701,7 +701,7 @@ public class TestHtmlRenderer
         para.LineCount = 1;
         blocks[1] = para;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 2);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 2);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -736,7 +736,7 @@ public class TestHtmlRenderer
         item.ChildCount = 0;
         blocks[1] = item;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 2);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 2);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -772,7 +772,7 @@ public class TestHtmlRenderer
         item.ChildCount = 0;
         blocks[1] = item;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 2);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 2);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -797,7 +797,7 @@ public class TestHtmlRenderer
         htmlBlock.ContentEnd = htmlContent.Length;
         blocks[0] = htmlBlock;
 
-        var doc = new RefMarkdownDocument(source, blocks, 1, 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);
@@ -1106,7 +1106,7 @@ public class TestHtmlRenderer
         var thematicBreak = Block.CreateThematicBreak(4, 0, '-');
         blocks[2] = thematicBreak;
 
-        var doc = new RefMarkdownDocument(source, blocks, 3, 5);
+        var doc = new RefMarkdownDocument(source, blocks, 3, Array.Empty<Inline>(), 5);
 
         var sb = new StringBuilder();
         var writer = new TextWriter(sb);

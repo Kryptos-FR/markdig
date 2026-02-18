@@ -19,6 +19,24 @@ public ref struct RefInlineProcessor
     private RefCollection<DelimiterRun> _delimiters;
 
     /// <summary>
+    /// Cached set of recognized HTML5 tag names for O(1) lookup during parsing.
+    /// Allocated once at type initialization to avoid repeated allocations.
+    /// </summary>
+    private static readonly HashSet<string> KnownHtmlTags = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "a", "abbr", "address", "area", "article", "aside", "audio", "b", "base",
+        "bdi", "bdo", "blockquote", "body", "br", "button", "canvas", "caption", "cite", "code", "col",
+        "colgroup", "data", "datalist", "dd", "del", "details", "dfn", "dialog", "div", "dl", "dt", "em",
+        "embed", "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6",
+        "head", "header", "hgroup", "hr", "html", "i", "iframe", "img", "input", "ins", "kbd", "label", "legend",
+        "li", "link", "main", "map", "mark", "menu", "meta", "meter", "nav", "noscript", "object", "ol", "optgroup",
+        "option", "output", "p", "param", "picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp",
+        "script", "section", "select", "slot", "small", "source", "span", "strong", "style", "sub", "summary",
+        "sup", "table", "tbody", "td", "template", "textarea", "tfoot", "th", "thead", "time", "title", "tr",
+        "track", "u", "ul", "var", "video", "wbr"
+    };
+
+    /// <summary>
     /// Represents a run of emphasis/strong delimiters in the text.
     /// </summary>
     public struct DelimiterRun
@@ -497,7 +515,36 @@ public ref struct RefInlineProcessor
 
         if (pos >= content.Length)
         {
-            pos = startPos + 1;
+            pos = startPos;
+            return false;
+        }
+
+        // Validate that we have a proper HTML tag or entity
+        var tagContent = content.Slice(startPos + 1, pos - startPos - 1);
+        if (tagContent.Length == 0)
+        {
+            // Empty <>, not valid
+            pos = startPos;
+            return false;
+        }
+
+        // Extract the tag name (everything until space, > or /)
+        int tagNameEnd = 0;
+        while (tagNameEnd < tagContent.Length &&
+               !char.IsWhiteSpace(tagContent[tagNameEnd]) &&
+               tagContent[tagNameEnd] != '/' &&
+               tagContent[tagNameEnd] != '>')
+        {
+            tagNameEnd++;
+        }
+
+        var tagName = tagContent.Slice(0, tagNameEnd).ToString();
+
+        // Check against cached known HTML5 tags (O(1) HashSet lookup)
+        if (!KnownHtmlTags.Contains(tagName) && tagContent[0] != '!')
+        {
+            // Not a valid HTML5 tag, and not a declaration (starting with !)
+            pos = startPos;
             return false;
         }
 
@@ -525,7 +572,8 @@ public ref struct RefInlineProcessor
 
         if (pos >= content.Length)
         {
-            pos = startPos + 1;
+            // No closing >, reset position to let other parsers try
+            pos = startPos;
             return false;
         }
 
@@ -540,8 +588,8 @@ public ref struct RefInlineProcessor
             return true;
         }
 
-        // Not a valid autolink, reset
-        pos = startPos + 1;
+        // Not a valid autolink, reset position to let other parsers try
+        pos = startPos;
         return false;
     }
 

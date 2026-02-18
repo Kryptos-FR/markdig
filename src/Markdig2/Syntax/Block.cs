@@ -70,6 +70,20 @@ public struct Block
     /// </summary>
     public int ChildCount { get; set; }
 
+    // === Inline Data (for leaf blocks with inline content) ===
+
+    /// <summary>
+    /// Gets or sets the index of the first inline element in the inlines array.
+    /// Only valid for leaf blocks that have inline content (Paragraph, Heading, etc.).
+    /// </summary>
+    public int FirstInlineIndex { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of inline elements in this leaf block.
+    /// Only valid for leaf blocks that have inline content.
+    /// </summary>
+    public int InlineCount { get; set; }
+
     // === Type-Specific Data ===
 
     /// <summary>

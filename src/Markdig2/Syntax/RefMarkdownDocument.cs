@@ -10,6 +10,7 @@ namespace Markdig2.Syntax;
 /// Represents a parsed markdown document as a ref struct.
 /// This is a stack-only type tied to the lifetime of the source span.
 /// Blocks are stored in a flat array with parent-child relationships tracked via indices.
+/// Inlines are also stored in a flat array with parent-child relationships tracked via indices.
 /// </summary>
 public ref struct RefMarkdownDocument
 {
@@ -19,12 +20,14 @@ public ref struct RefMarkdownDocument
     /// <param name="source">The source markdown text.</param>
     /// <param name="allBlocks">All parsed blocks in a flat span.</param>
     /// <param name="topLevelCount">The number of top-level blocks.</param>
+    /// <param name="allInlines">All parsed inline elements in a flat span.</param>
     /// <param name="lineCount">The total number of lines in the source.</param>
-    public RefMarkdownDocument(ReadOnlySpan<char> source, Span<Block> allBlocks, int topLevelCount, int lineCount)
+    public RefMarkdownDocument(ReadOnlySpan<char> source, Span<Block> allBlocks, int topLevelCount, Span<Inline> allInlines, int lineCount)
     {
         Source = source;
         AllBlocks = allBlocks;
         TopLevelBlockCount = topLevelCount;
+        AllInlines = allInlines;
         LineCount = lineCount;
     }
 
@@ -45,6 +48,12 @@ public ref struct RefMarkdownDocument
     public int TopLevelBlockCount { get; }
 
     /// <summary>
+    /// Gets all inline elements in a flat span.
+    /// Inlines are grouped by the blocks they belong to, starting after all blocks.
+    /// </summary>
+    public Span<Inline> AllInlines { get; }
+
+    /// <summary>
     /// Gets the total number of lines in the source document.
     /// </summary>
     public int LineCount { get; }
@@ -55,9 +64,19 @@ public ref struct RefMarkdownDocument
     public readonly int TotalBlockCount => AllBlocks.Length;
 
     /// <summary>
+    /// Gets the total number of inline elements.
+    /// </summary>
+    public readonly int TotalInlineCount => AllInlines.Length;
+
+    /// <summary>
     /// Gets a value indicating whether this document has any blocks.
     /// </summary>
     public readonly bool HasBlocks => AllBlocks.Length > 0;
+
+    /// <summary>
+    /// Gets a value indicating whether this document has any inlines.
+    /// </summary>
+    public readonly bool HasInlines => AllInlines.Length > 0;
 
     /// <summary>
     /// Gets a span of top-level blocks.
@@ -83,6 +102,21 @@ public ref struct RefMarkdownDocument
     }
 
     /// <summary>
+    /// Gets the inline elements of a leaf block.
+    /// </summary>
+    /// <param name="block">The leaf block.</param>
+    /// <returns>A span of inline elements, or empty if no inlines.</returns>
+    public readonly Span<Inline> GetInlines(ref Block block)
+    {
+        if (!block.IsLeafBlock || block.InlineCount == 0)
+        {
+            return [];
+        }
+
+        return AllInlines.Slice(block.FirstInlineIndex, block.InlineCount);
+    }
+
+    /// <summary>
     /// Gets a view of the entire source as a RefStringView.
     /// </summary>
     public readonly RefStringView GetSourceView()
@@ -95,6 +129,6 @@ public ref struct RefMarkdownDocument
     /// </summary>
     public override readonly string ToString()
     {
-        return $"Document(TopLevel={TopLevelBlockCount}, Total={TotalBlockCount}, Lines={LineCount})";
+        return $"Document(TopLevel={TopLevelBlockCount}, Total={TotalBlockCount}, Inlines={TotalInlineCount}, Lines={LineCount})";
     }
 }

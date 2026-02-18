@@ -19,7 +19,7 @@ public class RefMarkdownDocumentTests
             Block.CreateParagraph(2, 0),
         };
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 2, lineCount: 3);
+        var doc = new RefMarkdownDocument(source, blocks, 2, Array.Empty<Inline>(), 3);
 
         Assert.Equal(20, doc.Source.Length); // "# Heading\n\nParagraph" = 20 chars
         Assert.Equal(2, doc.TopLevelBlockCount);
@@ -39,7 +39,7 @@ public class RefMarkdownDocumentTests
             Block.CreateParagraph(2, 0), // This is a child
         };
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 2, lineCount: 3);
+        var doc = new RefMarkdownDocument(source, blocks, 2, Array.Empty<Inline>(), 3);
 
         var topLevel = doc.GetTopLevelBlocks();
 
@@ -62,7 +62,7 @@ public class RefMarkdownDocumentTests
         blocks[0].FirstChildIndex = 1;
         blocks[0].ChildCount = 2;
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 1, lineCount: 3);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 3);
 
         var quote = blocks[0];
         var children = doc.GetChildren(ref quote);
@@ -81,7 +81,7 @@ public class RefMarkdownDocumentTests
             Block.CreateParagraph(0, 0),
         };
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 1, lineCount: 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var paragraph = blocks[0];
         var children = doc.GetChildren(ref paragraph);
@@ -100,7 +100,7 @@ public class RefMarkdownDocumentTests
 
         blocks[0].ChildCount = 0;
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 1, lineCount: 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var quote = blocks[0];
         var children = doc.GetChildren(ref quote);
@@ -114,7 +114,7 @@ public class RefMarkdownDocumentTests
         Span<char> source = "Hello World".ToCharArray();
         var blocks = new Block[] { Block.CreateParagraph(0, 0) };
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 1, lineCount: 1);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 1);
 
         var sourceView = doc.GetSourceView();
 
@@ -127,7 +127,7 @@ public class RefMarkdownDocumentTests
         Span<char> source = "".ToCharArray();
         var blocks = Array.Empty<Block>();
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 0, lineCount: 0);
+        var doc = new RefMarkdownDocument(source, blocks, 0, Array.Empty<Inline>(), 0);
 
         Assert.False(doc.HasBlocks);
         Assert.Equal(0, doc.TotalBlockCount);
@@ -144,7 +144,7 @@ public class RefMarkdownDocumentTests
             Block.CreateHeading(1, 0, 1),
         };
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 2, lineCount: 5);
+        var doc = new RefMarkdownDocument(source, blocks, 2, Array.Empty<Inline>(), 5);
 
         var result = doc.ToString();
 
@@ -172,7 +172,7 @@ public class RefMarkdownDocumentTests
         blocks[1].FirstChildIndex = 2;
         blocks[1].ChildCount = 2;
 
-        var doc = new RefMarkdownDocument(source, blocks, topLevelCount: 1, lineCount: 3);
+        var doc = new RefMarkdownDocument(source, blocks, 1, Array.Empty<Inline>(), 3);
 
         // Verify top level
         var topLevel = doc.GetTopLevelBlocks();

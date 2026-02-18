@@ -21,12 +21,18 @@ public class HtmlRenderer : MarkdownRenderer
     {
     }
 
-    protected override void RenderParagraph(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderParagraph(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         Writer.Write("<p>");
 
-        if (block.ContentStart < block.ContentEnd)
+        if (block.InlineCount > 0)
         {
+            var inlines = allInlines.Slice(block.FirstInlineIndex, block.InlineCount);
+            RenderInlines(source, inlines);
+        }
+        else if (block.ContentStart < block.ContentEnd)
+        {
+            // Fallback: render raw content if no inlines parsed
             var content = source.Slice(block.ContentStart, block.ContentEnd - block.ContentStart);
             EscapeHtml(content);
         }
@@ -34,13 +40,19 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.WriteLine("</p>");
     }
 
-    protected override void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         var level = block.HeadingLevel;
         Writer.Write($"<h{level}>");
 
-        if (block.ContentStart < block.ContentEnd)
+        if (block.InlineCount > 0)
         {
+            var inlines = allInlines.Slice(block.FirstInlineIndex, block.InlineCount);
+            RenderInlines(source, inlines);
+        }
+        else if (block.ContentStart < block.ContentEnd)
+        {
+            // Fallback: render raw content if no inlines parsed
             var content = source.Slice(block.ContentStart, block.ContentEnd - block.ContentStart);
             EscapeHtml(content);
         }
@@ -48,7 +60,7 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.WriteLine($"</h{level}>");
     }
 
-    protected override void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         Writer.WriteLine("<pre><code>");
 
@@ -61,34 +73,34 @@ public class HtmlRenderer : MarkdownRenderer
         Writer.WriteLine("</code></pre>");
     }
 
-    protected override void RenderQuote(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderQuote(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         Writer.WriteLine("<blockquote>");
-        RenderChildren(source, ref block, allBlocks);
+        RenderChildren(source, ref block, allBlocks, allInlines);
         Writer.WriteLine("</blockquote>");
     }
 
-    protected override void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         var tag = block.IsOrderedList ? "ol" : "ul";
         Writer.WriteLine($"<{tag}>");
-        RenderChildren(source, ref block, allBlocks);
+        RenderChildren(source, ref block, allBlocks, allInlines);
         Writer.WriteLine($"</{tag}>");
     }
 
-    protected override void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         Writer.Write("<li>");
-        RenderChildren(source, ref block, allBlocks);
+        RenderChildren(source, ref block, allBlocks, allInlines);
         Writer.WriteLine("</li>");
     }
 
-    protected override void RenderThematicBreak(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderThematicBreak(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         Writer.WriteLine("<hr />");
     }
 
-    protected override void RenderHtmlBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    protected override void RenderHtmlBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         if (block.ContentStart < block.ContentEnd)
         {

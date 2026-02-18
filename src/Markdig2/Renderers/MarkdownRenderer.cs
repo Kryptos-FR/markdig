@@ -47,7 +47,7 @@ public abstract class MarkdownRenderer
         {
             IsFirstInContainer = i == 0;
             IsLastInContainer = i == blocks.Length - 1;
-            RenderBlock(document.Source, ref blocks[i], document.AllBlocks);
+            RenderBlock(document.Source, ref blocks[i], document.AllBlocks, document.AllInlines);
         }
     }
 
@@ -57,33 +57,34 @@ public abstract class MarkdownRenderer
     /// <param name="source">The source markdown text.</param>
     /// <param name="block">The block to render.</param>
     /// <param name="allBlocks">All blocks in the document (for navigating children).</param>
-    protected void RenderBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks)
+    /// <param name="allInlines">All inlines in the document (for rendering leaf block content).</param>
+    protected void RenderBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         switch (block.Type)
         {
             case BlockType.Paragraph:
-                RenderParagraph(source, ref block, allBlocks);
+                RenderParagraph(source, ref block, allBlocks, allInlines);
                 break;
             case BlockType.Heading:
-                RenderHeading(source, ref block, allBlocks);
+                RenderHeading(source, ref block, allBlocks, allInlines);
                 break;
             case BlockType.CodeBlock:
-                RenderCodeBlock(source, ref block, allBlocks);
+                RenderCodeBlock(source, ref block, allBlocks, allInlines);
                 break;
             case BlockType.Quote:
-                RenderQuote(source, ref block, allBlocks);
+                RenderQuote(source, ref block, allBlocks, allInlines);
                 break;
             case BlockType.List:
-                RenderList(source, ref block, allBlocks);
+                RenderList(source, ref block, allBlocks, allInlines);
                 break;
             case BlockType.ListItem:
-                RenderListItem(source, ref block, allBlocks);
+                RenderListItem(source, ref block, allBlocks, allInlines);
                 break;
             case BlockType.ThematicBreak:
-                RenderThematicBreak(source, ref block, allBlocks);
+                RenderThematicBreak(source, ref block, allBlocks, allInlines);
                 break;
             case BlockType.HtmlBlock:
-                RenderHtmlBlock(source, ref block, allBlocks);
+                RenderHtmlBlock(source, ref block, allBlocks, allInlines);
                 break;
             case BlockType.BlankLine:
                 // Blank lines are typically skipped in rendering
@@ -96,7 +97,7 @@ public abstract class MarkdownRenderer
     /// <summary>
     /// Renders child blocks of a container block.
     /// </summary>
-    protected void RenderChildren(ReadOnlySpan<char> source, ref Block containerBlock, Span<Block> allBlocks)
+    protected void RenderChildren(ReadOnlySpan<char> source, ref Block containerBlock, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         if (containerBlock.ChildCount == 0)
             return;
@@ -106,7 +107,7 @@ public abstract class MarkdownRenderer
         {
             IsFirstInContainer = i == 0;
             IsLastInContainer = i == children.Length - 1;
-            RenderBlock(source, ref children[i], allBlocks);
+            RenderBlock(source, ref children[i], allBlocks, allInlines);
         }
     }
 
@@ -180,14 +181,14 @@ public abstract class MarkdownRenderer
     }
 
     // Abstract methods for rendering specific block types
-    protected abstract void RenderParagraph(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderQuote(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderThematicBreak(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
-    protected abstract void RenderHtmlBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks);
+    protected abstract void RenderParagraph(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines);
+    protected abstract void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines);
+    protected abstract void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines);
+    protected abstract void RenderQuote(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines);
+    protected abstract void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines);
+    protected abstract void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines);
+    protected abstract void RenderThematicBreak(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines);
+    protected abstract void RenderHtmlBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines);
 
     // Abstract methods for rendering specific inline types
     protected abstract void RenderLiteral(ReadOnlySpan<char> source, ref Inline inline);
