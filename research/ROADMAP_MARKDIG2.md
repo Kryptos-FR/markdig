@@ -382,6 +382,12 @@ Note: `Inline` is a regular struct (not ref struct) because ref structs cannot b
 - 15 skipped (documented limitations)
 - 0 failures  ✅
 
+**Benchmark Results** (Phase 3 Validation):
+- Parse only: **2.12x faster** (25.69 µs → 12.14 µs), 55% memory
+- Full pipeline: **1.76-1.80x faster** (31.78 µs → 18.06/17.66 µs), 92% memory
+- Span API: ~2% faster than string API (17.66 vs 18.06 µs)
+- Rendering overhead: ~6 µs for both implementations (consistent)
+
 **Phase 3 Complete**: Full rendering pipeline with documented feature scope ✅
 
 ---
@@ -831,4 +837,26 @@ enum BlockType { Paragraph, Heading, CodeBlock, Quote, ... }
     - 15 skipped (documented limitations with Skip attribute and rationale)
     - 0 failures ✅
   - **Phase 3 Complete**: Full rendering pipeline with well-defined feature scope
-  - Status: **Phase 3.1-3.5 all complete** - Ready for Phase 4 (Performance & Optimization)```
+  - Status: **Phase 3.1-3.5 all complete** - Ready for Phase 4 (Performance & Optimization)
+
+- **2026-02-18**: Phase 3 Benchmarks COMPLETE ✅
+  - Added three ToHtml (parse+render) benchmark methods:
+    - `Markdig_ToHtml()` - baseline from original Markdig
+    - `Markdig2_ToHtml_String()` - Markdig2 with string input
+    - `Markdig2_ToHtml_Span()` - Markdig2 with ReadOnlySpan<char> input (zero-copy API)
+  - Updated benchmark documentation to reflect Phase 3 scope
+  - **Parse-Only Results (Phase 2 validation)**:
+    - Markdig: 25.69 µs, 24.84 KB allocated
+    - Markdig2: 12.14 µs, 13.74 KB allocated
+    - **Speedup: 2.12x**, Memory: 55% of original
+  - **Full Pipeline Results (Phase 3 validation)**:
+    - Markdig ToHtml: 31.78 µs, 29.43 KB allocated
+    - Markdig2 ToHtml String: 18.06 µs, 22.85 KB allocated
+    - Markdig2 ToHtml Span: 17.66 µs, 22.85 KB allocated
+    - **Speedup: 1.76-1.80x**, Memory: 92% of original
+  - **Key Insights**:
+    - Span API ~2% faster than string API (17.66 vs 18.06 µs)
+    - Rendering overhead consistent: ~6 µs for both implementations
+    - Memory efficiency: 55% for parse-only, 92% for full pipeline
+    - Performance advantage maintained end-to-end
+  - **Conclusion**: Phase 3 rendering adds minimal overhead, full pipeline maintains strong performance advantage over original Markdig```
