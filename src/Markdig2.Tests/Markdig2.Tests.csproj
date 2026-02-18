@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Markdig2\Markdig2.csproj" />
+    <ProjectReference Include="..\Markdig\Markdig.csproj" />
   </ItemGroup>
 
   <ItemGroup>
