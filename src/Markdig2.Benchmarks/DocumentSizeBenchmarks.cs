@@ -16,10 +16,10 @@ public class DocumentSizeBenchmarks
 {
     private string _smallDoc = null!;
     private char[] _smallChars = null!;
-    
+
     private string _mediumDoc = null!;
     private char[] _mediumChars = null!;
-    
+
     private string _largeDoc = null!;
     private char[] _largeChars = null!;
 
@@ -56,30 +56,30 @@ public class DocumentSizeBenchmarks
     private string GenerateMediumDocument()
     {
         var sb = new System.Text.StringBuilder();
-        
+
         sb.AppendLine("# Comprehensive Markdown Guide");
         sb.AppendLine();
         sb.AppendLine("This document demonstrates various markdown features and is designed to be representative of a typical blog post or documentation page.");
         sb.AppendLine();
-        
+
         for (int section = 1; section <= 10; section++)
         {
             sb.AppendLine($"## Section {section}: Feature Overview");
             sb.AppendLine();
             sb.AppendLine($"This section covers important concepts about markdown feature set number {section}. We'll explore various aspects including **bold text**, *italic text*, and `code snippets` throughout this section.");
             sb.AppendLine();
-            
+
             sb.AppendLine("### Key Points");
             sb.AppendLine();
             sb.AppendLine("Here are the main considerations:");
             sb.AppendLine();
-            
+
             for (int item = 1; item <= 5; item++)
             {
                 sb.AppendLine($"{item}. **Point {item}**: This is an important point about the topic. It contains detailed information with *emphasis* where needed and links to [external resources](https://example.com/page{section}-{item}).");
             }
             sb.AppendLine();
-            
+
             sb.AppendLine("### Code Example");
             sb.AppendLine();
             sb.AppendLine("```csharp");
@@ -99,7 +99,7 @@ public class DocumentSizeBenchmarks
             sb.AppendLine("}");
             sb.AppendLine("```");
             sb.AppendLine();
-            
+
             sb.AppendLine("### Nested Lists and Complex Structures");
             sb.AppendLine();
             sb.AppendLine("Here we demonstrate more complex structures:");
@@ -113,35 +113,35 @@ public class DocumentSizeBenchmarks
             sb.AppendLine("  - Information here");
             sb.AppendLine("  - More details");
             sb.AppendLine();
-            
+
             sb.AppendLine("> **Note**: This is a blockquote with important information.");
             sb.AppendLine("> It can span multiple lines and contain *formatted* text.");
             sb.AppendLine("> ");
             sb.AppendLine("> > Nested quotes are also supported.");
             sb.AppendLine();
-            
+
             sb.AppendLine("---");
             sb.AppendLine();
         }
-        
+
         sb.AppendLine("## Conclusion");
         sb.AppendLine();
         sb.AppendLine("This document has covered all the major features and provides a realistic test case for markdown parsing and rendering performance.");
         sb.AppendLine();
         sb.AppendLine("For more information, visit <https://spec.commonmark.org> or contact <support@example.com>.");
-        
+
         return sb.ToString().Replace("\r\n", "\n");
     }
 
     private string GenerateLargeDocument()
     {
         var sb = new System.Text.StringBuilder();
-        
+
         sb.AppendLine("# Complete Markdown Specification and Examples");
         sb.AppendLine();
         sb.AppendLine("This is a comprehensive document that tests parser and renderer performance on large files similar to complete books, extensive documentation, or aggregated content.");
         sb.AppendLine();
-        
+
         // Generate 25 chapters with extensive content
         for (int chapter = 1; chapter <= 25; chapter++)
         {
@@ -149,30 +149,30 @@ public class DocumentSizeBenchmarks
             sb.AppendLine();
             sb.AppendLine($"Welcome to chapter {chapter}. This chapter explores advanced concepts and provides extensive examples.");
             sb.AppendLine();
-            
+
             // 8 sections per chapter
             for (int section = 1; section <= 8; section++)
             {
                 sb.AppendLine($"## {chapter}.{section} Section Title: Core Concepts");
                 sb.AppendLine();
-                
+
                 // Multiple paragraphs
                 for (int para = 1; para <= 4; para++)
                 {
                     sb.AppendLine($"This is paragraph {para} in section {chapter}.{section}. It contains detailed information with **bold text**, *italic text*, and `inline code`. The content is designed to be realistic and includes [links to resources](https://example.com/ch{chapter}/sec{section}/para{para}) as well as technical terminology.");
                     sb.AppendLine();
                 }
-                
+
                 sb.AppendLine("### Detailed Examples");
                 sb.AppendLine();
-                
+
                 // Ordered list
                 for (int i = 1; i <= 7; i++)
                 {
                     sb.AppendLine($"{i}. **Example {i}**: This demonstrates feature {i} with comprehensive details. See [documentation](https://docs.example.com/{chapter}-{section}-{i}) for more information.");
                 }
                 sb.AppendLine();
-                
+
                 // Code block
                 sb.AppendLine("```csharp");
                 sb.AppendLine($"// Example code for Chapter {chapter}, Section {section}");
@@ -216,14 +216,14 @@ public class DocumentSizeBenchmarks
                 sb.AppendLine("}");
                 sb.AppendLine("```");
                 sb.AppendLine();
-                
+
                 // Blockquote
                 sb.AppendLine("> **Important Note**: This section contains critical information that should be carefully reviewed.");
                 sb.AppendLine("> ");
                 sb.AppendLine("> The concepts covered here form the foundation for understanding advanced topics in later chapters.");
                 sb.AppendLine("> Make sure to review the code examples and try implementing them yourself.");
                 sb.AppendLine();
-                
+
                 // Unordered list
                 sb.AppendLine("### Key Takeaways");
                 sb.AppendLine();
@@ -240,11 +240,11 @@ public class DocumentSizeBenchmarks
                 sb.AppendLine("  - Integration tests for workflows");
                 sb.AppendLine("  - Performance tests under load");
                 sb.AppendLine();
-                
+
                 sb.AppendLine("---");
                 sb.AppendLine();
             }
-            
+
             // Chapter summary
             sb.AppendLine($"## Chapter {chapter} Summary");
             sb.AppendLine();
@@ -255,7 +255,7 @@ public class DocumentSizeBenchmarks
             sb.AppendLine("---");
             sb.AppendLine();
         }
-        
+
         sb.AppendLine("# Appendix: Additional Resources");
         sb.AppendLine();
         sb.AppendLine("For further reading and reference materials, please visit:");
@@ -263,7 +263,7 @@ public class DocumentSizeBenchmarks
         sb.AppendLine("- <https://spec.commonmark.org>");
         sb.AppendLine("- <https://github.github.com/gfm/>");
         sb.AppendLine("- Contact: <documentation@example.com>");
-        
+
         return sb.ToString().Replace("\r\n", "\n");
     }
 

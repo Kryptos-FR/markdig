@@ -42,6 +42,29 @@ dotnet run -c Release -- all
 dotnet run -c Release -- --help
 ```
 
+**Result Organization:**
+- Each run creates a timestamped folder: `BenchmarkDotNet.Artifacts/yyyy-MM-dd_HH-mm-ss/`
+- Results are preserved across multiple runs (no overwriting)
+- When running `all`, all three suites share the same timestamped folder
+- Multiple export formats: HTML (for viewing), Markdown (for docs), CSV (for analysis)
+
+**Example output structure:**
+```
+BenchmarkDotNet.Artifacts/
+├── 2026-02-19_14-30-00/
+│   ├── results/
+│   │   ├── Markdig2.Benchmarks.ParsingBenchmark-report.html
+│   │   ├── Markdig2.Benchmarks.ParsingBenchmark-report.csv
+│   │   ├── Markdig2.Benchmarks.ParsingBenchmark-report-github.md
+│   │   ├── Markdig2.Benchmarks.DocumentSizeBenchmarks-report.html
+│   │   ├── Markdig2.Benchmarks.DocumentSizeBenchmarks-report.csv
+│   │   └── ...
+│   └── logs/
+└── 2026-02-19_15-45-00/
+    └── results/
+        └── ...
+```
+
 ### Advanced Usage
 
 ```bash

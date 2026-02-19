@@ -19,13 +19,13 @@ public class RealWorldBenchmarks
 {
     private string _redditPost = null!;
     private char[] _redditChars = null!;
-    
+
     private string _blogPost = null!;
     private char[] _blogChars = null!;
-    
+
     private string _readme = null!;
     private char[] _readmeChars = null!;
-    
+
     private string _technicalDoc = null!;
     private char[] _technicalChars = null!;
 
@@ -34,13 +34,13 @@ public class RealWorldBenchmarks
     {
         _redditPost = CreateRedditPost();
         _redditChars = _redditPost.ToCharArray();
-        
+
         _blogPost = CreateBlogPost();
         _blogChars = _blogPost.ToCharArray();
-        
+
         _readme = CreateReadme();
         _readmeChars = _readme.ToCharArray();
-        
+
         _technicalDoc = CreateTechnicalDoc();
         _technicalChars = _technicalDoc.ToCharArray();
     }
