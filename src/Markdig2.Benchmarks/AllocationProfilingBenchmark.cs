@@ -150,7 +150,7 @@ public class AllocationProfilingBenchmark
     {
         ReadOnlySpan<char> source = _redditChars;
         var doc = Parsers.RefMarkdownParser.Parse(source);
-        
+
         // Access document to prevent optimization
         _ = doc.TotalBlockCount;
         _ = doc.TotalInlineCount;
@@ -168,16 +168,16 @@ public class AllocationProfilingBenchmark
     public string Markdig2_RenderingOnly()
     {
         ReadOnlySpan<char> source = _redditChars;
-        
+
         // Parse first (this allocation is expected)
         var doc = Parsers.RefMarkdownParser.Parse(source);
-        
+
         // Focus on rendering allocations
         var writer = new System.Text.StringBuilder(capacity: 5000);
         var textWriter = new Renderers.TextWriter(writer);
         var renderer = new Renderers.HtmlRenderer(textWriter);
         renderer.Render(doc);
-        
+
         return writer.ToString();
     }
 }
