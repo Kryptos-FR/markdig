@@ -395,19 +395,28 @@ Note: `Inline` is a regular struct (not ref struct) because ref structs cannot b
 ### Phase 4: Performance & Optimization (1 week)
 **Goal**: Measure, profile, and optimize
 
-#### 4.1 Benchmarking Suite (~8 hours)
-- [ ] Create `Markdig2.Benchmarks` project
-- [ ] Benchmark vs original Markdig
+#### 4.1 Benchmarking Suite (~8 hours) ✅ COMPLETE
+- [x] Create `Markdig2.Benchmarks` project
+- [x] Benchmark vs original Markdig
   - Parse time
   - Render time
   - Total time
   - Memory allocation (GC.GetTotalMemory)
   - Allocations per parse (via BenchmarkDotNet)
-- [ ] Test documents:
+- [x] Test documents:
   - Small (< 1 KB)
   - Medium (10-100 KB)
   - Large (> 1 MB)
   - Real-world (Reddit posts, blog posts, docs)
+
+**Deliverables:**
+- ✅ DocumentSizeBenchmarks.cs with small/medium/large tests
+- ✅ RealWorldBenchmarks.cs with Reddit/Blog/README/TechDoc tests
+- ✅ Updated Program.cs with suite selection
+- ✅ Comprehensive README documentation
+- ✅ All benchmarks compile and run without errors
+
+**Results:** Benchmark infrastructure complete. Ready to run full performance analysis in Phase 4.2.
 
 #### 4.2 Profiling & Analysis (~8 hours)
 - [ ] Memory profiling
@@ -447,8 +456,8 @@ Note: `Inline` is a regular struct (not ref struct) because ref structs cannot b
 - [ ] Inline HTML
 - [ ] Hard line breaks
 - [ ] Soft line breaks
-- [ ] Strikethrough (if common)
-- [ ] Tables (basic, if time permits)
+- [ ] Strikethrough
+- [ ] Tables
 
 #### 5.2 Edge Cases & Spec Compliance (~10 hours)
 - [ ] CommonMark spec tests

@@ -1,6 +1,64 @@
 # Markdig2 Benchmarks
 
-## Phase 1 Baseline Performance
+## Overview
+
+Comprehensive benchmark suite for Markdig2 comparing performance against the original Markdig library. Includes benchmarks for different document sizes and real-world use cases.
+
+## Available Benchmark Suites
+
+### 1. ParsingBenchmark (Phase 3 Complete)
+Comprehensive parsing benchmark with all Phase 2 features (blocks + inlines).
+
+**Document:** ~2KB markdown with all block and inline types
+**Metrics:** Parse-only and full pipeline (parse + render)
+
+### 2. DocumentSizeBenchmarks (Phase 4.1)
+Tests performance across different document sizes:
+- **Small** (~500 bytes): Quick notes, comments
+- **Medium** (~50KB): Blog posts, documentation pages
+- **Large** (~1.2MB): Books, extensive documentation
+
+### 3. RealWorldBenchmarks (Phase 4.1)
+Real-world document patterns:
+- **Reddit Post**: Technical post with code, lists, quotes
+- **Blog Post**: Article with headers, code blocks, mixed content
+- **README**: GitHub-style README with badges, installation, examples
+- **Technical Documentation**: API docs with table of contents, code examples
+
+## Running Benchmarks
+
+### Quick Start
+
+```bash
+cd src/Markdig2.Benchmarks
+
+# Run specific suite
+dotnet run -c Release -- parsing
+dotnet run -c Release -- sizes
+dotnet run -c Release -- realworld
+dotnet run -c Release -- all
+
+# Show help
+dotnet run -c Release -- --help
+```
+
+### Advanced Usage
+
+```bash
+# Filter by category
+dotnet run -c Release -- --filter '*Small*'
+dotnet run -c Release -- --filter '*Reddit*'
+
+# Quick run (less iterations)
+dotnet run -c Release -- --job short
+
+# Export results
+dotnet run -c Release -- --exporters json html
+```
+
+## Benchmark Results
+
+
 
 Early performance validation of ref struct parsing approach (Phase 1 - basic paragraph and blank line parsing only).
 
@@ -44,10 +102,181 @@ Early performance validation of ref struct parsing approach (Phase 1 - basic par
    - Re-benchmark to ensure performance characteristics hold
    - Target: Maintain <2µs mean time and <5KB allocation for similar documents
 
-### Running Benchmarks
+## Benchmark Results
 
+### Phase 1 Baseline Performance
+
+Early performance validation of ref struct parsing approach (Phase 1 - basic paragraph and blank line parsing only).
+
+**Environment:**
+- .NET 10.0.1
+- Intel Core i3-10110U CPU 2.10GHz
+- Ubuntu 25.10
+
+**Test Document:** ~800 bytes with paragraphs and blank lines
+
+| Method | Mean | Ratio | Allocated | Alloc Ratio |
+|--------|------|-------|-----------|-------------|
+| Markdig (Original) | 8.605 µs | 1.00 | 6.66 KB | 1.00 |
+| Markdig2 (Ref Struct) | 1.145 µs | 0.13 | 4.16 KB | 0.62 |
+
+**Key Findings:**
+- ⚡ **7.5x faster** (8.605 µs → 1.145 µs)
+- 💾 **38% less memory** (6.66 KB → 4.16 KB)
+- 🗑️ **37% less GC** pressure
+
+### Phase 2 Complete Feature Performance
+
+Performance with all Phase 2 features (block + inline parsing).
+
+**Environment:**
+- .NET 10.0.2
+- Intel Core i3-10110U CPU 2.10GHz
+- Windows 11
+
+**Test Document:** ~2KB with all block and inline types
+
+| Method | Mean | Ratio | Allocated | Alloc Ratio |
+|--------|------|-------|-----------|-------------|
+| Markdig (Original) | 28.686 µs | 1.00 | 24.84 KB | 1.00 |
+| Markdig2 (Ref Struct) | 8.855 µs | 0.31 | 6.86 KB | 0.28 |
+
+**Key Findings:**
+- ⚡ **3.24x faster** (28.686 µs → 8.855 µs)
+- 💾 **72% less memory** (24.84 KB → 6.86 KB)
+- 🗑️ **73% less Gen0 GC**, **zero Gen1** collections
+
+### Phase 3 Complete Pipeline (Parse + Render)
+
+Full pipeline with HTML rendering.
+
+**Environment:**
+- .NET 10.0.2, X64 RyuJIT AVX2
+- Windows 11
+
+**Test Document:** ~2KB comprehensive markdown
+
+| Method | Mean | Allocated | Speedup | Memory Ratio |
+|--------|------|-----------|---------|--------------|
+| **Parse Only** |
+| Markdig | 25.69 µs | 24.84 KB | baseline | 1.00 |
+| Markdig2 | 12.14 µs | 13.74 KB | **2.12x** | 0.55 |
+| **Full Pipeline (Parse + Render)** |
+| Markdig ToHtml | 31.78 µs | 29.43 KB | baseline | 1.00 |
+| Markdig2 ToHtml String | 18.06 µs | 22.85 KB | **1.76x** | 0.92 |
+| Markdig2 ToHtml Span | 17.66 µs | 22.85 KB | **1.80x** | 0.92 |
+
+**Key Findings:**
+- Parse-only: **2.12x faster**, 45% less memory
+- Full pipeline: **1.76-1.80x faster**, 8% less memory
+- Span API: ~2% faster than string API
+- Consistent ~6µs rendering overhead
+
+### Phase 4.1 Document Size Benchmarks
+
+**Status:** ✅ Complete (benchmark suite implemented, awaiting full run)
+
+Comprehensive benchmarks across document sizes:
+
+**Small Documents (<1KB):**
+- Typical: Comments, quick notes, chat messages
+- Test size: ~500 bytes
+
+**Medium Documents (10-100KB):**
+- Typical: Blog posts, documentation pages
+- Test size: ~50KB
+- Structure: 10 sections with code blocks, lists, quotes
+
+**Large Documents (>1MB):**
+- Typical: Books, extensive documentation, aggregated content
+- Test size: ~1.2MB
+- Structure: 25 chapters × 8 sections with full markdown features
+
+**Real-World Pattern Benchmarks:**
+
+1. **Reddit Post** (~3KB)
+   - Technical discussion with code blocks
+   - Lists, blockquotes, emphasis
+   - Typical social media content
+
+2. **Blog Post** (~5KB)
+   - Article format with introduction
+   - Multiple sections with code examples
+   - Mixed inline and block elements
+
+3. **GitHub README** (~6KB)
+   - Project documentation
+   - Installation instructions
+   - Usage examples and code blocks
+   - Badges, links, and structured content
+
+4. **Technical Documentation** (~10KB)
+   - API reference format
+   - Table of contents
+   - Extensive code examples
+   - Performance characteristics section
+
+**To run these benchmarks:**
 ```bash
-cd src/Markdig2.Benchmarks
+# Individual suites
+dotnet run -c Release -- sizes
+dotnet run -c Release -- realworld
+
+# Specific categories
+dotnet run -c Release -- --filter '*Small*'
+dotnet run -c Release -- --filter '*Reddit*'
+
+# All benchmarks
+dotnet run -c Release -- all
+```
+
+**Expected Characteristics:**
+- Linear scaling with document size O(n)
+- Consistent throughput (MB/s) across sizes
+- Memory usage proportional to document complexity
+- Maintained performance advantage vs Markdig
+
+---
+
+## Phase 4.1 Completion Summary
+
+### Implemented Benchmarks
+
+✅ **Document Size Benchmarks** (DocumentSizeBenchmarks.cs)
+- Small (<1KB): Quick notes, comments
+- Medium (~50KB): Blog posts, generated with realistic structure
+- Large (~1.2MB): Books, extensive docs (25 chapters × 8 sections)
+
+✅ **Real-World Benchmarks** (RealWorldBenchmarks.cs)
+- Reddit Post: Technical discussion with mixed content
+- Blog Post: Article format with comprehensive features
+- GitHub README: Project documentation style
+- Technical Documentation: API reference format
+
+✅ **Benchmark Infrastructure**
+- Updated Program.cs with suite selection
+- Category-based grouping for organized results
+- Help menu for easy usage
+- Integration with BenchmarkDotNet filtering
+
+✅ **Documentation**
+- Comprehensive README with usage examples
+- Document size descriptions
+- Real-world pattern explanations
+- Command line examples for all scenarios
+
+### Next Steps (Phase 4.2)
+
+After running full benchmarks:
+- Profile memory usage across document sizes
+- Identify performance bottlenecks
+- Analyze GC pressure patterns
+- Measure stack depth for large documents
+
+---
+
+## Historical Benchmark Notes
+
 dotnet run -c Release
 ```
 
