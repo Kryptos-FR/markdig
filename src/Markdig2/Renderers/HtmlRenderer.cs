@@ -43,7 +43,9 @@ public class HtmlRenderer : MarkdownRenderer
     protected override void RenderHeading(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
         var level = block.HeadingLevel;
-        Writer.Write($"<h{level}>");
+        Writer.Write("<h");
+        Writer.Write((char)('0' + level));
+        Writer.Write(">");
 
         if (block.InlineCount > 0)
         {
@@ -57,7 +59,9 @@ public class HtmlRenderer : MarkdownRenderer
             EscapeHtml(content);
         }
 
-        Writer.WriteLine($"</h{level}>");
+        Writer.Write("</h");
+        Writer.Write((char)('0' + level));
+        Writer.WriteLine(">");
     }
 
     protected override void RenderCodeBlock(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
@@ -82,10 +86,18 @@ public class HtmlRenderer : MarkdownRenderer
 
     protected override void RenderList(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
     {
-        var tag = block.IsOrderedList ? "ol" : "ul";
-        Writer.WriteLine($"<{tag}>");
-        RenderChildren(source, ref block, allBlocks, allInlines);
-        Writer.WriteLine($"</{tag}>");
+        if (block.IsOrderedList)
+        {
+            Writer.WriteLine("<ol>");
+            RenderChildren(source, ref block, allBlocks, allInlines);
+            Writer.WriteLine("</ol>");
+        }
+        else
+        {
+            Writer.WriteLine("<ul>");
+            RenderChildren(source, ref block, allBlocks, allInlines);
+            Writer.WriteLine("</ul>");
+        }
     }
 
     protected override void RenderListItem(ReadOnlySpan<char> source, ref Block block, Span<Block> allBlocks, Span<Inline> allInlines)
@@ -295,7 +307,8 @@ public class HtmlRenderer : MarkdownRenderer
 
         // Collect text from children (recursively for nested inlines)
         var childSpan = allInlines.Slice(image.FirstChildIndex, image.ChildCount);
-        var sb = new System.Text.StringBuilder();
+        // Pre-size StringBuilder based on estimated text length
+        var sb = new System.Text.StringBuilder(capacity: 128);
 
         foreach (var child in childSpan)
         {

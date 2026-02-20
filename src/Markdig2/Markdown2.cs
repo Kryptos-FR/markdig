@@ -43,7 +43,8 @@ public static class Markdown2
         var document = RefMarkdownParser.Parse(markdown);
 
         // Render to HTML
-        var builder = new StringBuilder();
+        // Pre-size StringBuilder: HTML output is typically 2.5-3x input size
+        var builder = new StringBuilder(markdown.Length * 2);
         var writer = new Renderers.TextWriter(builder);
         var renderer = new HtmlRenderer(writer);
         renderer.Render(document);
