@@ -220,5 +220,59 @@ namespace Markdig.Tests.Specs.Abbreviations
 
             TestParser.TestSpec("*[Foo]: foo\n*[Foo Bar]: foobar\n\nFoo B", "<p><abbr title=\"foo\">Foo</abbr> B</p>", "abbreviations|advanced", context: "Example 11\nSection Extensions / Abbreviation\n");
         }
+
+        // Abbreviation before emphasis on the same line should be resolved:
+        [Test]
+        public void ExtensionsAbbreviation_Example012()
+        {
+            // Example 12
+            // Section: Extensions / Abbreviation
+            //
+            // The following Markdown:
+            //     *[HTML]: HyperText Markup Language
+            //     
+            //     HTML supports **bold** and *italic*
+            //
+            // Should be rendered as:
+            //     <p><abbr title="HyperText Markup Language">HTML</abbr> supports <strong>bold</strong> and <em>italic</em></p>
+
+            TestParser.TestSpec("*[HTML]: HyperText Markup Language\n\nHTML supports **bold** and *italic*", "<p><abbr title=\"HyperText Markup Language\">HTML</abbr> supports <strong>bold</strong> and <em>italic</em></p>", "abbreviations|advanced", context: "Example 12\nSection Extensions / Abbreviation\n");
+        }
+
+        // Abbreviation inside emphasis should be resolved:
+        [Test]
+        public void ExtensionsAbbreviation_Example013()
+        {
+            // Example 13
+            // Section: Extensions / Abbreviation
+            //
+            // The following Markdown:
+            //     *[HTML]: HyperText Markup Language
+            //     
+            //     **HTML is great**
+            //
+            // Should be rendered as:
+            //     <p><strong><abbr title="HyperText Markup Language">HTML</abbr> is great</strong></p>
+
+            TestParser.TestSpec("*[HTML]: HyperText Markup Language\n\n**HTML is great**", "<p><strong><abbr title=\"HyperText Markup Language\">HTML</abbr> is great</strong></p>", "abbreviations|advanced", context: "Example 13\nSection Extensions / Abbreviation\n");
+        }
+
+        // Abbreviation both before and inside emphasis on the same line should be resolved:
+        [Test]
+        public void ExtensionsAbbreviation_Example014()
+        {
+            // Example 14
+            // Section: Extensions / Abbreviation
+            //
+            // The following Markdown:
+            //     *[HTML]: HyperText Markup Language
+            //     
+            //     HTML supports **bold** and **HTML too**
+            //
+            // Should be rendered as:
+            //     <p><abbr title="HyperText Markup Language">HTML</abbr> supports <strong>bold</strong> and <strong><abbr title="HyperText Markup Language">HTML</abbr> too</strong></p>
+
+            TestParser.TestSpec("*[HTML]: HyperText Markup Language\n\nHTML supports **bold** and **HTML too**", "<p><abbr title=\"HyperText Markup Language\">HTML</abbr> supports <strong>bold</strong> and <strong><abbr title=\"HyperText Markup Language\">HTML</abbr> too</strong></p>", "abbreviations|advanced", context: "Example 14\nSection Extensions / Abbreviation\n");
+        }
     }
 }

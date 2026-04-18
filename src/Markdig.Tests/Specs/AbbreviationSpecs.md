@@ -119,3 +119,33 @@ Foo B
 .
 <p><abbr title="foo">Foo</abbr> B</p>
 ````````````````````````````````
+
+Abbreviation before emphasis on the same line should be resolved:
+
+```````````````````````````````` example
+*[HTML]: HyperText Markup Language
+
+HTML supports **bold** and *italic*
+.
+<p><abbr title="HyperText Markup Language">HTML</abbr> supports <strong>bold</strong> and <em>italic</em></p>
+````````````````````````````````
+
+Abbreviation inside emphasis should be resolved:
+
+```````````````````````````````` example
+*[HTML]: HyperText Markup Language
+
+**HTML is great**
+.
+<p><strong><abbr title="HyperText Markup Language">HTML</abbr> is great</strong></p>
+````````````````````````````````
+
+Abbreviation both before and inside emphasis on the same line should be resolved:
+
+```````````````````````````````` example
+*[HTML]: HyperText Markup Language
+
+HTML supports **bold** and **HTML too**
+.
+<p><abbr title="HyperText Markup Language">HTML</abbr> supports <strong>bold</strong> and <strong><abbr title="HyperText Markup Language">HTML</abbr> too</strong></p>
+````````````````````````````````
