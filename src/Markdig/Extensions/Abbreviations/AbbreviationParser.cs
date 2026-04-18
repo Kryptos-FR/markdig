@@ -67,14 +67,14 @@ public class AbbreviationParser : BlockParser
         };
         if (!processor.Document.HasAbbreviations())
         {
-            processor.Document.ProcessInlinesBegin += DocumentOnProcessInlinesBegin;
+            processor.Document.ProcessInlinesEnd += DocumentOnProcessInlinesEnd;
         }
         processor.Document.AddAbbreviation(abbr.Label, abbr);
 
         return BlockState.BreakDiscard;
     }
 
-    private void DocumentOnProcessInlinesBegin(InlineProcessor inlineProcessor, Inline? inline)
+    private void DocumentOnProcessInlinesEnd(InlineProcessor inlineProcessor, Inline? inline)
     {
         var abbreviations = inlineProcessor.Document.GetAbbreviations();
         // Should not happen, but another extension could decide to remove them, so...
@@ -86,113 +86,151 @@ public class AbbreviationParser : BlockParser
         // Build a text matcher from the abbreviations labels
         var prefixTree = new CompactPrefixTree<Abbreviation>(abbreviations);
 
-        inlineProcessor.LiteralInlineParser.PostMatch += (InlineProcessor processor, ref StringSlice slice) =>
+        // Allocate the traversal stack once and reuse it across all leaf blocks.
+        var stack = new Stack<ContainerInline>();
+
+        foreach (var leaf in inlineProcessor.Document.Descendants<LeafBlock>())
         {
-            var literal = (LiteralInline)processor.Inline!;
-            var originalLiteral = literal;
-            var originalSpanEnd = literal.Span.End;
-
-            ContainerInline? container = null;
-
-            // This is slow, but we don't have much the choice
-            var content = literal.Content;
-            var text = content.Text;
-
-            for (int i = content.Start; i <= content.End; i++)
+            if (leaf.Inline is not null)
             {
-                // Abbreviation must be a whole word == start at the start of a line or after a whitespace
-                if (i != 0)
+                SubstituteInlineTree(leaf.Inline, prefixTree, stack);
+            }
+        }
+    }
+
+    private static void SubstituteInlineTree(
+        ContainerInline root,
+        CompactPrefixTree<Abbreviation> prefixTree,
+        Stack<ContainerInline> stack)
+    {
+        stack.Push(root);
+
+        while (stack.Count > 0)
+        {
+            var container = stack.Pop();
+            var child = container.FirstChild;
+            while (child != null)
+            {
+                var next = child.NextSibling;
+                if (child is LiteralInline literal)
                 {
-                    for (i = i - 1; i <= content.End; i++)
+                    SubstituteInLiteral(literal, prefixTree);
+                }
+                else if (child is ContainerInline childContainer)
+                {
+                    stack.Push(childContainer);
+                }
+                child = next;
+            }
+        }
+    }
+
+    private static void SubstituteInLiteral(LiteralInline literal, CompactPrefixTree<Abbreviation> prefixTree)
+    {
+        var content = literal.Content;
+        var text = content.Text;
+        var parent = literal.Parent;
+
+        // Nothing to do if this literal has no parent to insert siblings into
+        if (parent is null)
+        {
+            return;
+        }
+
+        // Save original span end before any mutations: on the first substitution
+        // currentLiteral IS literal, so currentLiteral.Span.End = abbrSpanStart - 1
+        // would corrupt literal.Span.End, which we need for remaining-literal calculations.
+        var originalSpanEnd = literal.Span.End;
+
+        // The "current" literal we're truncating as we find abbreviations.
+        // We start with the original literal — it stays in place and we insert after it.
+        var currentLiteral = literal;
+
+        for (int i = content.Start; i <= content.End; i++)
+        {
+            // Abbreviation must start at the beginning of the content or after whitespace
+            if (i != content.Start)
+            {
+                // Find the next whitespace-separated word start
+                for (i = i - 1; i <= content.End; i++)
+                {
+                    if (text[i].IsWhitespace())
                     {
-                        if (text[i].IsWhitespace())
-                        {
-                            i++;
-                            goto ValidAbbreviationStart;
-                        }
+                        i++;
+                        goto ValidAbbreviationStart;
                     }
-                    break;
+                }
+                break;
+            }
+
+        ValidAbbreviationStart:;
+
+            if (prefixTree.TryMatchLongest(text.AsSpan(i, content.End - i + 1), out KeyValuePair<string, Abbreviation> abbreviationMatch))
+            {
+                var match = abbreviationMatch.Key;
+                if (!IsValidAbbreviationEnding(match, content, i))
+                {
+                    continue;
                 }
 
-            ValidAbbreviationStart:;
+                var indexAfterMatch = i + match.Length;
 
-                if (prefixTree.TryMatchLongest(text.AsSpan(i, content.End - i + 1), out KeyValuePair<string, Abbreviation> abbreviationMatch))
+                // Compute source position from the original literal's own span/line/column.
+                // We use literal.Content.Start (the ORIGINAL literal parameter, never reassigned)
+                // because span positions are always relative to the start of the original literal.
+                // (InlineProcessor is not available post-parse; this is safe because
+                //  LiteralInlineParser never produces a literal spanning a line break.)
+                int charOffset = i - literal.Content.Start; // offset from original literal start
+                var abbrSpanStart = literal.Span.Start + charOffset;
+                var abbrInline = new AbbreviationInline(abbreviationMatch.Value)
                 {
-                    var match = abbreviationMatch.Key;
-                    if (!IsValidAbbreviationEnding(match, content, i))
+                    Span = new SourceSpan(abbrSpanStart, abbrSpanStart + match.Length - 1),
+                    Line = literal.Line,
+                    Column = literal.Column + charOffset,
+                };
+
+                // Truncate currentLiteral to end just before the abbreviation
+                currentLiteral.Content.End = i - 1;
+                currentLiteral.Span.End = abbrSpanStart - 1;
+
+                // Insert abbreviation after currentLiteral
+                currentLiteral.InsertAfter(abbrInline);
+
+                // If the truncated literal is now empty (abbreviation was at the very start
+                // of its content), remove it so it doesn't litter the tree.
+                if (currentLiteral.Content.End < currentLiteral.Content.Start)
+                {
+                    currentLiteral.Remove();
+                }
+
+                // If there is remaining text after the abbreviation, create a new literal for it
+                if (indexAfterMatch <= content.End)
+                {
+                    var remainingContent = content;
+                    remainingContent.Start = indexAfterMatch;
+
+                    var remainingLiteral = new LiteralInline
                     {
-                        continue;
-                    }
-
-                    var indexAfterMatch = i + match.Length;
-
-                    // If we don't have a container, create a new one
-                    if (container is null)
-                    {
-                        container = literal.Parent ??
-                            new ContainerInline
-                            {
-                                Span = originalLiteral.Span,
-                                Line = originalLiteral.Line,
-                                Column = originalLiteral.Column,
-                            };
-                    }
-
-                    var abbrInline = new AbbreviationInline(abbreviationMatch.Value)
-                    {
-                        Span =
-                        {
-                            Start = processor.GetSourcePosition(i, out int line, out int column),
-                        },
-                        Line = line,
-                        Column = column
-                    };
-                    abbrInline.Span.End = abbrInline.Span.Start + match.Length - 1;
-
-                    // Append the previous literal
-                    if (i > content.Start && literal.Parent is null)
-                    {
-                        container.AppendChild(literal);
-                    }
-
-                    literal.Span.End = abbrInline.Span.Start - 1;
-                    // Truncate it before the abbreviation
-                    literal.Content.End = i - 1;
-
-
-                    // Append the abbreviation
-                    container.AppendChild(abbrInline);
-
-                    // If this is the end of the string, clear the literal and exit
-                    if (content.End == indexAfterMatch - 1)
-                    {
-                        literal = null;
-                        break;
-                    }
-
-                    // Process the remaining literal
-                    literal = new LiteralInline()
-                    {
+                        Content = remainingContent,
                         Span = new SourceSpan(abbrInline.Span.End + 1, originalSpanEnd),
-                        Line = line,
-                        Column = column + match.Length,
+                        Line = literal.Line,
+                        Column = literal.Column + (indexAfterMatch - literal.Content.Start),
                     };
-                    content.Start = indexAfterMatch;
-                    literal.Content = content;
+                    abbrInline.InsertAfter(remainingLiteral);
 
+                    // Continue scanning from the new literal
+                    currentLiteral = remainingLiteral;
+                    // Update content reference so the loop bounds are correct
+                    content = remainingContent;
                     i = indexAfterMatch - 1;
                 }
-            }
-
-            if (container != null)
-            {
-                if (literal != null)
+                else
                 {
-                    container.AppendChild(literal);
+                    // No text left — stop
+                    break;
                 }
-                processor.Inline = container;
             }
-        };
+        }
     }
 
     private static bool IsValidAbbreviationEnding(string match, StringSlice content, int matchIndex)
